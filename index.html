@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f2f2f7">
-<title>Controle de Dívida</title>
+<title>Controle de Empréstimo</title>
 <style>
   *{box-sizing:border-box}
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom));background:#f2f2f7;color:#111}
@@ -12,7 +12,7 @@
   [hidden]{display:none!important}
   h1{font-size:22px;margin:0 0 12px}
   .card{background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 1px 3px #0001;overflow:hidden}
-  .saldo{font-size:clamp(26px,7vw,34px);font-weight:700;color:#c0392b;overflow-wrap:anywhere}
+  .saldo{font-size:clamp(26px,7vw,34px);font-weight:700;color:#007aff;overflow-wrap:anywhere}
   .sub{color:#666;font-size:14px;margin-top:4px}
   label{display:block;font-size:13px;color:#555;margin-top:8px;margin-bottom:4px}
   input,select,button{display:block;width:100%;max-width:100%;min-width:0;padding:11px;font-size:16px;border:1px solid #ccc;border-radius:10px;background:#fff;color:#111}
@@ -44,10 +44,10 @@
 </head>
 <body>
 <main id="app">
-<h1>💰 Controle de Dívida</h1>
+<h1>💰 Controle de Empréstimo</h1>
 
-<section class="card" aria-label="Resumo da dívida">
-  <div class="sub">Saldo devedor atualizado</div>
+<section class="card" aria-label="Resumo do valor a receber">
+  <div class="sub">Saldo a receber (atualizado)</div>
   <div class="saldo" id="saldo">R$ 0,00</div>
   <div class="sub" id="hoje"></div>
   <div class="sub" id="juroDia"></div>
@@ -78,9 +78,9 @@
   <input id="valor" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0,00" required>
   <div class="row">
     <button type="button" class="emp" id="btnEmp">+ Empréstimo</button>
-    <button type="button" class="pag" id="btnPag">− Pagamento</button>
+    <button type="button" class="pag" id="btnPag">− Pagamento recebido</button>
   </div>
-  <div class="hint">Os pagamentos reduzem o saldo pelo valor atualizado desde a data do pagamento. Confira os lançamentos antes de usar o total como valor para quitação.</div>
+  <div class="hint">Cada pagamento recebido é abatido na data em que foi feito. A partir daí, os juros deixam de correr sobre esse valor. Confira os lançamentos antes de usar o total como valor para quitação.</div>
 </section>
 
 <section class="card">
@@ -178,7 +178,7 @@ function render() {
       tdData.textContent = item.d.split('-').reverse().join('/');
       const tdValor = document.createElement('td');
       tdValor.className = item.t === 'Pagamento' ? 'neg' : 'pos';
-      tdValor.textContent = (item.t === 'Pagamento' ? '− ' : '+ ') + brl(item.v);
+      tdValor.textContent = (item.t === 'Pagamento' ? '− Recebido ' : '+ Emprestado ') + brl(item.v);
       const tdAtual = document.createElement('td');
       tdAtual.textContent = brl(valorAtualizado);
       const tdAcao = document.createElement('td');
@@ -194,9 +194,9 @@ function render() {
     });
   }
   $('saldo').textContent = brl(total);
-  $('saldo').style.color = total < 0 ? '#168447' : '#c0392b';
+  $('saldo').style.color = total < 0 ? '#c0392b' : '#007aff';
   $('hoje').textContent = '📅 Calculado em: ' + hoje().toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'2-digit', year:'numeric'});
-  $('juroDia').textContent = 'Juros estimados por dia: ' + brl(total * st.taxa / 100 / 30);
+  $('juroDia').textContent = 'Juros a receber por dia (estimado): ' + brl(total * st.taxa / 100 / 30);
   $('contagem').textContent = `${st.itens.length} lançamento(s)`;
 }
 function adicionar(tipo) {
@@ -215,7 +215,7 @@ function exportar() {
   const blob = new Blob([JSON.stringify(st, null, 2)], {type:'application/json;charset=utf-8'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'backup-divida-' + dataLocalISO() + '.json';
+  a.href = url; a.download = 'backup-emprestimo-' + dataLocalISO() + '.json';
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
@@ -302,14 +302,14 @@ function renderCalc() {
       ? `${brl(it.v)} × (1 + ${num(r)} × ${num(n)})`
       : `${brl(it.v)} × (1 + ${num(r)}) ^ ${num(n)}`;
     html += `<section class="card ${emp ? 'tag-e' : 'tag-p'}">
-      <h3>${emp ? '🔴 Empréstimo ' + cE : '🟢 Pagamento ' + cP}: ${brl(it.v)}</h3>
+      <h3>${emp ? '🔴 Empréstimo ' + cE : '🟢 Pagamento recebido ' + cP}: ${brl(it.v)}</h3>
       ${kv('Período', fmtD(it.d) + ' → ' + fmtD(h))}
       ${kv('Dias corridos', d + ' dias = ' + num(n) + ' mês(es)')}
       <div class="formula">${conta}<br>= ${brl(it.v)} × ${num(f, 6)}<br>= <b>${brl(at)}</b></div>
       ${kv('Valor original', brl(it.v))}
-      ${kv(emp ? 'Juros cobrados' : 'Juros a seu favor', brl(j))}
-      ${kv(emp ? 'Valor devido hoje' : 'Abate do saldo', (emp ? '' : '− ') + brl(at), 'total')}
-      ${emp ? '' : `<div class="hint">Desde ${fmtD(it.d)}, este pagamento rende juros na mesma taxa a seu favor. No resumo, ele é descontado do total dos empréstimos.</div>`}
+      ${kv(emp ? 'Juros a receber' : 'Juros que deixaram de correr', brl(j))}
+      ${kv(emp ? 'Valor a receber hoje' : 'Abatido do saldo a receber', (emp ? '' : '− ') + brl(at), 'total')}
+      ${emp ? '' : `<div class="hint">A partir de ${fmtD(it.d)}, estes ${brl(it.v)} deixaram de gerar juros para o devedor. O valor corrigido mostra quanto ele economizou ao pagar nessa data.</div>`}
     </section>`;
   });
 
@@ -319,26 +319,26 @@ function renderCalc() {
     const antes = saldoEm(d, false), depois = saldoEm(d, true);
     const juros = k ? antes - ant : 0;
     const ev = st.itens.filter(i => i.d === d)
-      .map(i => `<span class="${i.t === 'Pagamento' ? 'neg' : 'pos'}">${i.t === 'Pagamento' ? '− ' : '+ '}${brl(i.v)}</span>`).join('<br>');
+      .map(i => `<span class="${i.t === 'Pagamento' ? 'neg' : 'pos'}">${i.t === 'Pagamento' ? '− Recebido ' : '+ Emprestado '}${brl(i.v)}</span>`).join('<br>');
     linhas += `<tr><td>${fmtD(d)}</td><td>${ev}</td><td>${k ? brl(juros) : '—'}</td><td><b>${brl(depois)}</b></td></tr>`;
     ant = depois;
   });
   const final = saldoEm(h, true);
   linhas += `<tr><td><b>${fmtD(h)}</b></td><td>Hoje</td><td>${brl(final - ant)}</td><td><b>${brl(final)}</b></td></tr>`;
-  html += `<section class="card tag-r"><h3>🕒 Linha do tempo do saldo</h3>
-    <div class="table-wrap"><table><thead><tr><th>Data</th><th>Evento</th><th>Juros no período</th><th>Saldo após</th></tr></thead>
+  html += `<section class="card tag-r"><h3>🕒 Linha do tempo do saldo a receber</h3>
+    <div class="table-wrap"><table><thead><tr><th>Data</th><th>Evento</th><th>Juros no período</th><th>Saldo a receber</th></tr></thead>
     <tbody>${linhas}</tbody></table></div>
-    <div class="hint">"Juros no período" são os juros que correram desde o evento anterior. Cada pagamento aparece abatendo o saldo na data em que foi feito.</div></section>`;
+    <div class="hint">"Juros no período" são os juros a receber que correram desde o evento anterior. Cada pagamento recebido aparece abatendo o saldo na data em que foi feito.</div></section>`;
 
   html += `<section class="card tag-r"><h3>📋 Resumo final</h3>
-    ${kv('Empréstimos (original)', brl(oE))}
-    ${kv('+ Juros dos empréstimos', brl(aE - oE))}
+    ${kv('Emprestado (original)', brl(oE))}
+    ${kv('+ Juros a receber', brl(aE - oE))}
     ${kv('= Empréstimos atualizados', brl(aE))}
-    ${kv('Pagamentos (original)', brl(oP))}
-    ${kv('+ Juros a seu favor', brl(aP - oP))}
+    ${kv('Pagamentos recebidos (original)', brl(oP))}
+    ${kv('+ Juros que deixaram de correr', brl(aP - oP))}
     ${kv('= Pagamentos atualizados', brl(aP))}
     <div class="formula">${brl(aE)} − ${brl(aP)}</div>
-    ${kv('Saldo devedor hoje', brl(aE - aP), 'total')}
+    ${kv('Saldo a receber hoje', brl(aE - aP), 'total')}
   </section>`;
   $('calcConteudo').innerHTML = html;
 }
