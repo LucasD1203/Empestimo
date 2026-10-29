@@ -8,8 +8,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Dívida">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="apple-touch-icon" id="iconeApple">
-<link rel="icon" id="iconeFav">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2">
+<link rel="icon" type="image/png" href="apple-touch-icon.png?v=2">
 <title>Controle de Dívida</title>
 <style>
   *{box-sizing:border-box}
@@ -105,57 +105,6 @@
 
 <script>
 'use strict';
-
-(function gerarIcone() {
-  const s = 180, c = document.createElement('canvas');
-  c.width = c.height = s;
-  const g = c.getContext('2d');
-  const ret = (x, y, w, h, r, cor, borda) => {
-    g.beginPath();
-    g.moveTo(x + r, y);
-    g.arcTo(x + w, y, x + w, y + h, r);
-    g.arcTo(x + w, y + h, x, y + h, r);
-    g.arcTo(x, y + h, x, y, r);
-    g.arcTo(x, y, x + w, y, r);
-    g.closePath();
-    g.fillStyle = cor; g.fill();
-    if (borda) { g.lineWidth = 4; g.strokeStyle = borda; g.stroke(); }
-  };
-  g.fillStyle = '#f4a261'; g.fillRect(0, 0, s, s);
-  g.fillStyle = '#e9c46a';
-  for (let i = 0; i < 16; i += 2) {
-    const a1 = (i/16)*Math.PI*2, a2 = ((i+1)/16)*Math.PI*2;
-    g.beginPath(); g.moveTo(s/2, s/2);
-    g.lineTo(s/2 + Math.cos(a1)*200, s/2 + Math.sin(a1)*200);
-    g.lineTo(s/2 + Math.cos(a2)*200, s/2 + Math.sin(a2)*200);
-    g.closePath(); g.fill();
-  }
-  ret(38, 24, 104, 136, 12, '#2a9d8f', '#264653');
-  ret(38, 24, 104, 24, 10, '#e76f51', '#264653');
-  g.fillStyle = '#fdf0d5';
-  g.font = 'bold 17px "Courier New", monospace';
-  g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillText('ATM', s/2, 37);
-  ret(52, 56, 76, 44, 6, '#10241b', '#264653');
-  g.fillStyle = '#7CFC00'; g.shadowColor = '#7CFC00'; g.shadowBlur = 8;
-  g.font = 'bold 30px "Courier New", monospace';
-  g.fillText('R$', s/2, 79);
-  g.shadowBlur = 0; g.fillStyle = 'rgba(0,0,0,.3)';
-  for (let y = 58; y < 100; y += 3) g.fillRect(54, y, 72, 1);
-  for (let l = 0; l < 3; l++) for (let k = 0; k < 3; k++)
-    ret(54 + k*14, 108 + l*10, 11, 7, 2, '#fdf0d5', null);
-  ret(102, 110, 26, 6, 2, '#264653', null);
-  ret(102, 122, 26, 14, 3, '#e9c46a', '#264653');
-  ret(56, 142, 68, 7, 3, '#264653', null);
-  ret(68, 146, 44, 22, 2, '#6ab04c', '#264653');
-  g.fillStyle = '#264653';
-  g.font = 'bold 13px "Courier New", monospace';
-  g.fillText('$', s/2, 158);
-  const png = c.toDataURL('image/png');
-  document.getElementById('iconeApple').href = png;
-  document.getElementById('iconeFav').href = png;
-})();
-
 const KEY = 'divida_v1';
 const $ = id => document.getElementById(id);
 const brl = n => Number(n).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
