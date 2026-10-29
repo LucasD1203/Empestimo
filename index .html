@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f2f2f7">
+<title>Controle de Dívida</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom));background:#f2f2f7;color:#111}
+  main{max-width:760px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 12px}
+  .card{background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 1px 3px #0001;overflow:hidden}
+  .saldo{font-size:clamp(26px,7vw,34px);font-weight:700;color:#c0392b;overflow-wrap:anywhere}
+  .sub{color:#666;font-size:14px;margin-top:4px}
+  label{display:block;font-size:13px;color:#555;margin-top:8px;margin-bottom:4px}
+  input,select,button{display:block;width:100%;max-width:100%;min-width:0;padding:11px;font-size:16px;border:1px solid #ccc;border-radius:10px;background:#fff;color:#111}
+  input[type=date]{-webkit-appearance:none;appearance:none;min-height:44px;text-align:left}
+  input[type=date]::-webkit-date-and-time-value{text-align:left}
+  button{color:#fff;border:none;margin-top:12px;font-weight:600;cursor:pointer;min-height:44px}
+  button:active{opacity:.82}
+  .emp{background:#c0392b}.pag{background:#27ae60}.azul{background:#007aff}.cinza{background:#8e8e93}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  td,th{padding:8px 5px;border-bottom:1px solid #eee;text-align:left;overflow-wrap:anywhere}
+  th{font-size:12px;color:#666}
+  .neg{color:#168447}.pos{color:#c0392b}
+  .del{background:none;color:#c0392b;border:none;width:auto;min-height:32px;margin:0;padding:4px 8px;font-size:18px}
+  .row{display:flex;gap:8px;align-items:stretch}
+  .row>*{flex:1;min-width:0}
+  .table-wrap{overflow-x:auto}
+  .empty{text-align:center;color:#777;padding:18px 8px}
+  .hint{font-size:12px;color:#666;line-height:1.4;margin-top:8px}
+  .secondary{background:#e5e5ea;color:#222}
+  @media(max-width:380px){body{padding:10px}.card{padding:11px}.row{gap:6px}table{font-size:12px}td,th{padding:7px 3px}}
+</style>
+</head>
+<body>
+<main>
+<h1>💰 Controle de Dívida</h1>
+
+<section class="card" aria-label="Resumo da dívida">
+  <div class="sub">Saldo devedor atualizado</div>
+  <div class="saldo" id="saldo">R$ 0,00</div>
+  <div class="sub" id="hoje"></div>
+  <div class="sub" id="juroDia"></div>
+</section>
+
+<section class="card">
+  <div class="row">
+    <div>
+      <label for="taxa">Taxa mensal (%)</label>
+      <input id="taxa" type="number" min="0" step="0.1" inputmode="decimal" value="7">
+    </div>
+    <div>
+      <label for="modo">Tipo de juros</label>
+      <select id="modo">
+        <option value="s">Simples</option>
+        <option value="c">Compostos</option>
+      </select>
+    </div>
+  </div>
+  <div class="hint">A taxa e o tipo de juros são aplicados a todos os lançamentos, desde a data de cada um.</div>
+</section>
+
+<section class="card">
+  <label for="data">Data do lançamento</label>
+  <input id="data" type="date" required>
+  <label for="valor">Valor (R$)</label>
+  <input id="valor" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0,00" required>
+  <div class="row">
+    <button type="button" class="emp" id="btnEmp">+ Empréstimo</button>
+    <button type="button" class="pag" id="btnPag">− Pagamento</button>
+  </div>
+  <div class="hint">Os pagamentos reduzem o saldo pelo valor atualizado desde a data do pagamento. Confira os lançamentos antes de usar o total como valor para quitação.</div>
+</section>
+
+<section class="card">
+  <h2 style="font-size:17px;margin:0 0 10px">Lançamentos</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Data</th><th>Tipo / valor</th><th>Atualizado</th><th aria-label="Ações"></th></tr></thead>
+      <tbody id="lista"></tbody>
+    </table>
+  </div>
+  <div class="hint" id="contagem"></div>
+</section>
+
+<section class="card">
+  <div class="sub">Backup dos dados</div>
+  <div class="row">
+    <button type="button" class="azul" id="btnExportar">⬇️ Exportar</button>
+    <button type="button" class="cinza" id="btnImportar">⬆️ Importar</button>
+  </div>
+  <input id="arq" type="file" accept=".json,application/json" hidden>
+  <button type="button" class="secondary" id="btnLimpar">Limpar todos os lançamentos</button>
+  <div class="hint">Os dados ficam salvos neste navegador e neste aparelho. Exporte um backup regularmente, especialmente antes de trocar de celular ou limpar os dados do navegador.</div>
+</section>
+</main>
+
+<script>
+'use strict';
+const KEY = 'divida_v1';
+const $ = id => document.getElementById(id);
+const brl = n => Number(n).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+const hoje = () => {
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  return d;
+};
+function dataLocalISO(d = new Date()) {
+  const ano = d.getFullYear();
+  const mes = String(d.getMonth()+1).padStart(2,'0');
+  const dia = String(d.getDate()).padStart(2,'0');
+  return `${ano}-${mes}-${dia}`;
+}
+function estadoInicial() { return {taxa:7, modo:'s', itens:[]}; }
+function carregar() {
+  try {
+    const salvo = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (salvo && Array.isArray(salvo.itens)) {
+      return {
+        taxa: Number.isFinite(Number(salvo.taxa)) ? Math.max(0, Number(salvo.taxa)) : 7,
+        modo: salvo.modo === 'c' ? 'c' : 's',
+        itens: salvo.itens.filter(i => i && /^\d{4}-\d{2}-\d{2}$/.test(i.d) &&
+          (i.t === 'Empréstimo' || i.t === 'Pagamento') &&
+          Number.isFinite(Number(i.v)) && Number(i.v) > 0)
+          .map(i => ({d:i.d, t:i.t, v:Number(i.v)}))
+      };
+    }
+  } catch (e) {}
+  return estadoInicial();
+}
+let st = carregar();
+function save() {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(st));
+  } catch (e) {
+    alert('Não foi possível salvar os dados neste navegador. Exporte um backup para não perder os lançamentos.');
+  }
+}
+function dias(data) {
+  const alvo = new Date(data + 'T00:00:00');
+  return Math.max(0, Math.floor((hoje().getTime() - alvo.getTime()) / 86400000));
+}
+function atualizado(item) {
+  const r = st.taxa / 100;
+  const n = dias(item.d) / 30;
+  const fator = st.modo === 's' ? 1 + r*n : Math.pow(1+r,n);
+  const valor = item.v * fator;
+  return item.t === 'Pagamento' ? -valor : valor;
+}
+function render() {
+  $('taxa').value = st.taxa;
+  $('modo').value = st.modo;
+  st.itens.sort((a,b) => a.d.localeCompare(b.d));
+  let total = 0;
+  $('lista').innerHTML = '';
+  if (st.itens.length === 0) {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 4;
+    td.className = 'empty';
+    td.textContent = 'Nenhum lançamento cadastrado.';
+    tr.appendChild(td);
+    $('lista').appendChild(tr);
+  } else {
+    st.itens.forEach((item, index) => {
+      const valorAtualizado = atualizado(item);
+      total += valorAtualizado;
+      const tr = document.createElement('tr');
+      const tdData = document.createElement('td');
+      tdData.textContent = item.d.split('-').reverse().join('/');
+      const tdValor = document.createElement('td');
+      tdValor.className = item.t === 'Pagamento' ? 'neg' : 'pos';
+      tdValor.textContent = (item.t === 'Pagamento' ? '− ' : '+ ') + brl(item.v);
+      const tdAtual = document.createElement('td');
+      tdAtual.textContent = brl(valorAtualizado);
+      const tdAcao = document.createElement('td');
+      const botao = document.createElement('button');
+      botao.type = 'button';
+      botao.className = 'del';
+      botao.setAttribute('aria-label', 'Excluir lançamento');
+      botao.title = 'Excluir lançamento';
+      botao.textContent = '✕';
+      botao.addEventListener('click', () => excluir(index));
+      tdAcao.appendChild(botao);
+      tr.append(tdData, tdValor, tdAtual, tdAcao);
+      $('lista').appendChild(tr);
+    });
+  }
+  $('saldo').textContent = brl(total);
+  $('saldo').style.color = total < 0 ? '#168447' : '#c0392b';
+  $('hoje').textContent = '📅 Calculado em: ' + hoje().toLocaleDateString('pt-BR', {
+    weekday:'long', day:'2-digit', month:'2-digit', year:'numeric'
+  });
+  $('juroDia').textContent = 'Juros estimados por dia: ' + brl(total * st.taxa / 100 / 30);
+  $('contagem').textContent = `${st.itens.length} lançamento(s)`;
+}
+function adicionar(tipo) {
+  const v = Number($('valor').value);
+  const d = $('data').value;
+  if (!d) { alert('Informe a data do lançamento.'); $('data').focus(); return; }
+  if (!Number.isFinite(v) || v <= 0) { alert('Informe um valor maior que zero.'); $('valor').focus(); return; }
+  if (d > dataLocalISO()) {
+    if (!confirm('A data informada é futura. Deseja registrar mesmo assim?')) return;
+  }
+  st.itens.push({d, t:tipo, v:Math.round(v*100)/100});
+  save();
+  $('valor').value = '';
+  render();
+}
+function excluir(index) {
+  if (confirm('Excluir este lançamento?')) {
+    st.itens.splice(index, 1);
+    save();
+    render();
+  }
+}
+function exportar() {
+  const blob = new Blob([JSON.stringify(st, null, 2)], {type:'application/json;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'backup-divida-' + dataLocalISO() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+$('arq').addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const dados = JSON.parse(reader.result);
+      if (!dados || !Array.isArray(dados.itens)) throw new Error('Formato inválido');
+      const itens = dados.itens.map(i => {
+        if (!i || !/^\d{4}-\d{2}-\d{2}$/.test(i.d) ||
+            !['Empréstimo','Pagamento'].includes(i.t) ||
+            !Number.isFinite(Number(i.v)) || Number(i.v) <= 0) throw new Error('Lançamento inválido');
+        return {d:i.d, t:i.t, v:Math.round(Number(i.v)*100)/100};
+      });
+      const taxa = Number(dados.taxa);
+      const modo = dados.modo === 'c' ? 'c' : 's';
+      if (!Number.isFinite(taxa) || taxa < 0) throw new Error('Taxa inválida');
+      if (confirm('Substituir os dados atuais pelo conteúdo deste backup?')) {
+        st = {taxa, modo, itens};
+        save();
+        render();
+        alert('Backup restaurado com sucesso.');
+      }
+    } catch (err) {
+      alert('Arquivo de backup inválido ou incompatível.');
+    }
+    e.target.value = '';
+  };
+  reader.onerror = () => { alert('Não foi possível ler o arquivo.'); e.target.value = ''; };
+  reader.readAsText(file);
+});
+$('taxa').addEventListener('change', e => {
+  const taxa = Number(e.target.value);
+  st.taxa = Number.isFinite(taxa) && taxa >= 0 ? taxa : 0;
+  save(); render();
+});
+$('modo').addEventListener('change', e => {
+  st.modo = e.target.value === 'c' ? 'c' : 's';
+  save(); render();
+});
+$('btnEmp').addEventListener('click', () => adicionar('Empréstimo'));
+$('btnPag').addEventListener('click', () => adicionar('Pagamento'));
+$('btnExportar').addEventListener('click', exportar);
+$('btnImportar').addEventListener('click', () => $('arq').click());
+$('btnLimpar').addEventListener('click', () => {
+  if (confirm('Tem certeza de que deseja apagar todos os lançamentos? Exporte um backup antes, se precisar guardá-los.')) {
+    st.itens = [];
+    save();
+    render();
+  }
+});
+$('data').value = dataLocalISO();
+render();
+</script>
+</body>
+</html>
