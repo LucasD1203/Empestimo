@@ -6,18 +6,19 @@
 <meta name="theme-color" content="#f2f2f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Dívida">
+<meta name="apple-mobile-web-app-title" content="Empréstimo">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2">
-<link rel="icon" type="image/png" href="apple-touch-icon.png?v=2">
-<title>Controle de Dívida</title>
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=3">
+<link rel="icon" type="image/png" href="./apple-touch-icon.png?v=3">
+<title>Controle de Empréstimo</title>
 <style>
   *{box-sizing:border-box}
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom));background:#f2f2f7;color:#111}
   main{max-width:760px;margin:0 auto}
+  [hidden]{display:none!important}
   h1{font-size:22px;margin:0 0 12px}
   .card{background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 1px 3px #0001;overflow:hidden}
-  .saldo{font-size:clamp(26px,7vw,34px);font-weight:700;color:#c0392b;overflow-wrap:anywhere}
+  .saldo{font-size:clamp(26px,7vw,34px);font-weight:700;color:#007aff;overflow-wrap:anywhere}
   .sub{color:#666;font-size:14px;margin-top:4px}
   label{display:block;font-size:13px;color:#555;margin-top:8px;margin-bottom:4px}
   input,select,button{display:block;width:100%;max-width:100%;min-width:0;padding:11px;font-size:16px;border:1px solid #ccc;border-radius:10px;background:#fff;color:#111}
@@ -37,18 +38,26 @@
   .empty{text-align:center;color:#777;padding:18px 8px}
   .hint{font-size:12px;color:#666;line-height:1.4;margin-top:8px}
   .secondary{background:#e5e5ea;color:#222}
+  .calc h3{font-size:16px;margin:0 0 8px}
+  .kv{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #eee;font-size:14px}
+  .kv span:first-child{color:#666}
+  .kv b{text-align:right}
+  .kv.total{font-weight:700;font-size:15px;border-bottom:none}
+  .formula{background:#f2f2f7;border-radius:8px;padding:9px;font-family:ui-monospace,Menlo,monospace;font-size:13px;margin:8px 0;overflow-wrap:anywhere;line-height:1.5}
+  .tag-e{border-left:5px solid #c0392b}.tag-p{border-left:5px solid #27ae60}.tag-r{border-left:5px solid #007aff}
   @media(max-width:380px){body{padding:10px}.card{padding:11px}.row{gap:6px}table{font-size:12px}td,th{padding:7px 3px}}
 </style>
 </head>
 <body>
-<main>
-<h1>💰 Controle de Dívida</h1>
+<main id="app">
+<h1>💰 Controle de Empréstimo</h1>
 
-<section class="card" aria-label="Resumo da dívida">
-  <div class="sub">Saldo devedor atualizado</div>
+<section class="card" aria-label="Resumo do valor a receber">
+  <div class="sub">Saldo a receber (atualizado)</div>
   <div class="saldo" id="saldo">R$ 0,00</div>
   <div class="sub" id="hoje"></div>
   <div class="sub" id="juroDia"></div>
+  <button type="button" class="azul" id="btnCalc">📊 Ver cálculo detalhado</button>
 </section>
 
 <section class="card">
@@ -75,9 +84,9 @@
   <input id="valor" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0,00" required>
   <div class="row">
     <button type="button" class="emp" id="btnEmp">+ Empréstimo</button>
-    <button type="button" class="pag" id="btnPag">− Pagamento</button>
+    <button type="button" class="pag" id="btnPag">− Pagamento recebido</button>
   </div>
-  <div class="hint">Os pagamentos reduzem o saldo pelo valor atualizado desde a data do pagamento. Confira os lançamentos antes de usar o total como valor para quitação.</div>
+  <div class="hint">Cada pagamento recebido é abatido na data em que foi feito. A partir daí, os juros deixam de correr sobre esse valor. Confira os lançamentos antes de usar o total como valor para quitação.</div>
 </section>
 
 <section class="card">
@@ -103,16 +112,18 @@
 </section>
 </main>
 
+<main id="calc" class="calc" hidden>
+  <button type="button" class="secondary" id="btnVoltar" style="margin:0 0 12px">← Voltar</button>
+  <h1>📊 Memória de Cálculo</h1>
+  <div id="calcConteudo"></div>
+</main>
+
 <script>
 'use strict';
 const KEY = 'divida_v1';
 const $ = id => document.getElementById(id);
 const brl = n => Number(n).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-const hoje = () => {
-  const d = new Date();
-  d.setHours(0,0,0,0);
-  return d;
-};
+const hoje = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
 function dataLocalISO(d = new Date()) {
   const ano = d.getFullYear();
   const mes = String(d.getMonth()+1).padStart(2,'0');
@@ -138,11 +149,8 @@ function carregar() {
 }
 let st = carregar();
 function save() {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(st));
-  } catch (e) {
-    alert('Não foi possível salvar os dados neste navegador. Exporte um backup para não perder os lançamentos.');
-  }
+  try { localStorage.setItem(KEY, JSON.stringify(st)); }
+  catch (e) { alert('Não foi possível salvar os dados neste navegador. Exporte um backup para não perder os lançamentos.'); }
 }
 function dias(data) {
   const alvo = new Date(data + 'T00:00:00');
@@ -164,11 +172,9 @@ function render() {
   if (st.itens.length === 0) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
-    td.colSpan = 4;
-    td.className = 'empty';
+    td.colSpan = 4; td.className = 'empty';
     td.textContent = 'Nenhum lançamento cadastrado.';
-    tr.appendChild(td);
-    $('lista').appendChild(tr);
+    tr.appendChild(td); $('lista').appendChild(tr);
   } else {
     st.itens.forEach((item, index) => {
       const valorAtualizado = atualizado(item);
@@ -178,13 +184,12 @@ function render() {
       tdData.textContent = item.d.split('-').reverse().join('/');
       const tdValor = document.createElement('td');
       tdValor.className = item.t === 'Pagamento' ? 'neg' : 'pos';
-      tdValor.textContent = (item.t === 'Pagamento' ? '− ' : '+ ') + brl(item.v);
+      tdValor.textContent = (item.t === 'Pagamento' ? '− Recebido ' : '+ Emprestado ') + brl(item.v);
       const tdAtual = document.createElement('td');
       tdAtual.textContent = brl(valorAtualizado);
       const tdAcao = document.createElement('td');
       const botao = document.createElement('button');
-      botao.type = 'button';
-      botao.className = 'del';
+      botao.type = 'button'; botao.className = 'del';
       botao.setAttribute('aria-label', 'Excluir lançamento');
       botao.title = 'Excluir lançamento';
       botao.textContent = '✕';
@@ -195,11 +200,9 @@ function render() {
     });
   }
   $('saldo').textContent = brl(total);
-  $('saldo').style.color = total < 0 ? '#168447' : '#c0392b';
-  $('hoje').textContent = '📅 Calculado em: ' + hoje().toLocaleDateString('pt-BR', {
-    weekday:'long', day:'2-digit', month:'2-digit', year:'numeric'
-  });
-  $('juroDia').textContent = 'Juros estimados por dia: ' + brl(total * st.taxa / 100 / 30);
+  $('saldo').style.color = total < 0 ? '#c0392b' : '#007aff';
+  $('hoje').textContent = '📅 Calculado em: ' + hoje().toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'2-digit', year:'numeric'});
+  $('juroDia').textContent = 'Juros a receber por dia (estimado): ' + brl(total * st.taxa / 100 / 30);
   $('contagem').textContent = `${st.itens.length} lançamento(s)`;
 }
 function adicionar(tipo) {
@@ -207,30 +210,19 @@ function adicionar(tipo) {
   const d = $('data').value;
   if (!d) { alert('Informe a data do lançamento.'); $('data').focus(); return; }
   if (!Number.isFinite(v) || v <= 0) { alert('Informe um valor maior que zero.'); $('valor').focus(); return; }
-  if (d > dataLocalISO()) {
-    if (!confirm('A data informada é futura. Deseja registrar mesmo assim?')) return;
-  }
+  if (d > dataLocalISO() && !confirm('A data informada é futura. Deseja registrar mesmo assim?')) return;
   st.itens.push({d, t:tipo, v:Math.round(v*100)/100});
-  save();
-  $('valor').value = '';
-  render();
+  save(); $('valor').value = ''; render();
 }
 function excluir(index) {
-  if (confirm('Excluir este lançamento?')) {
-    st.itens.splice(index, 1);
-    save();
-    render();
-  }
+  if (confirm('Excluir este lançamento?')) { st.itens.splice(index, 1); save(); render(); }
 }
 function exportar() {
   const blob = new Blob([JSON.stringify(st, null, 2)], {type:'application/json;charset=utf-8'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = 'backup-divida-' + dataLocalISO() + '.json';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  a.href = url; a.download = 'backup-emprestimo-' + dataLocalISO() + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 $('arq').addEventListener('change', e => {
@@ -242,8 +234,7 @@ $('arq').addEventListener('change', e => {
       const dados = JSON.parse(reader.result);
       if (!dados || !Array.isArray(dados.itens)) throw new Error('Formato inválido');
       const itens = dados.itens.map(i => {
-        if (!i || !/^\d{4}-\d{2}-\d{2}$/.test(i.d) ||
-            !['Empréstimo','Pagamento'].includes(i.t) ||
+        if (!i || !/^\d{4}-\d{2}-\d{2}$/.test(i.d) || !['Empréstimo','Pagamento'].includes(i.t) ||
             !Number.isFinite(Number(i.v)) || Number(i.v) <= 0) throw new Error('Lançamento inválido');
         return {d:i.d, t:i.t, v:Math.round(Number(i.v)*100)/100};
       });
@@ -251,14 +242,10 @@ $('arq').addEventListener('change', e => {
       const modo = dados.modo === 'c' ? 'c' : 's';
       if (!Number.isFinite(taxa) || taxa < 0) throw new Error('Taxa inválida');
       if (confirm('Substituir os dados atuais pelo conteúdo deste backup?')) {
-        st = {taxa, modo, itens};
-        save();
-        render();
+        st = {taxa, modo, itens}; save(); render();
         alert('Backup restaurado com sucesso.');
       }
-    } catch (err) {
-      alert('Arquivo de backup inválido ou incompatível.');
-    }
+    } catch (err) { alert('Arquivo de backup inválido ou incompatível.'); }
     e.target.value = '';
   };
   reader.onerror = () => { alert('Não foi possível ler o arquivo.'); e.target.value = ''; };
@@ -279,13 +266,101 @@ $('btnExportar').addEventListener('click', exportar);
 $('btnImportar').addEventListener('click', () => $('arq').click());
 $('btnLimpar').addEventListener('click', () => {
   if (confirm('Tem certeza de que deseja apagar todos os lançamentos? Exporte um backup antes, se precisar guardá-los.')) {
-    st.itens = [];
-    save();
-    render();
+    st.itens = []; save(); render();
   }
 });
+
+/* ===== Memória de Cálculo ===== */
+const fmtD = s => s.split('-').reverse().join('/');
+const num = (n, c = 4) => n.toLocaleString('pt-BR', {maximumFractionDigits: c});
+const kv = (a, b, cls = '') => `<div class="kv ${cls}"><span>${a}</span><b>${b}</b></div>`;
+function diasEntre(a, b) {
+  return Math.max(0, Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00')) / 86400000));
+}
+function fatorEntre(a, b) {
+  const r = st.taxa/100, n = diasEntre(a, b)/30;
+  return st.modo === 's' ? 1 + r*n : Math.pow(1+r, n);
+}
+function saldoEm(data, incluiDia) {
+  return st.itens.reduce((s, it) => {
+    if (incluiDia ? it.d > data : it.d >= data) return s;
+    const v = it.v * fatorEntre(it.d, data);
+    return s + (it.t === 'Pagamento' ? -v : v);
+  }, 0);
+}
+function renderCalc() {
+  st.itens.sort((a,b) => a.d.localeCompare(b.d));
+  const h = dataLocalISO(), r = st.taxa/100, simples = st.modo === 's';
+  let html = `<section class="card tag-r">
+    ${kv('Data do cálculo', fmtD(h))}
+    ${kv('Taxa', num(st.taxa) + '% ao mês (' + (simples ? 'juros simples' : 'juros compostos') + ')')}
+    ${kv('Mês considerado', '30 dias')}
+    <div class="formula">${simples ? 'Atualizado = Valor × (1 + taxa × dias ÷ 30)' : 'Atualizado = Valor × (1 + taxa) ^ (dias ÷ 30)'}</div>
+  </section>`;
+  if (!st.itens.length) { $('calcConteudo').innerHTML = html + '<div class="card empty">Nenhum lançamento cadastrado.</div>'; return; }
+
+  let oE = 0, aE = 0, oP = 0, aP = 0, cE = 0, cP = 0;
+  st.itens.forEach(it => {
+    const emp = it.t === 'Empréstimo', d = diasEntre(it.d, h), n = d/30;
+    const f = fatorEntre(it.d, h), at = it.v*f, j = at - it.v;
+    if (emp) { oE += it.v; aE += at; cE++; } else { oP += it.v; aP += at; cP++; }
+    const conta = simples
+      ? `${brl(it.v)} × (1 + ${num(r)} × ${num(n)})`
+      : `${brl(it.v)} × (1 + ${num(r)}) ^ ${num(n)}`;
+    html += `<section class="card ${emp ? 'tag-e' : 'tag-p'}">
+      <h3>${emp ? '🔴 Empréstimo ' + cE : '🟢 Pagamento recebido ' + cP}: ${brl(it.v)}</h3>
+      ${kv('Período', fmtD(it.d) + ' → ' + fmtD(h))}
+      ${kv('Dias corridos', d + ' dias = ' + num(n) + ' mês(es)')}
+      <div class="formula">${conta}<br>= ${brl(it.v)} × ${num(f, 6)}<br>= <b>${brl(at)}</b></div>
+      ${kv('Valor original', brl(it.v))}
+      ${kv(emp ? 'Juros a receber' : 'Juros que deixaram de correr', brl(j))}
+      ${kv(emp ? 'Valor a receber hoje' : 'Abatido do saldo a receber', (emp ? '' : '− ') + brl(at), 'total')}
+      ${emp ? '' : `<div class="hint">A partir de ${fmtD(it.d)}, estes ${brl(it.v)} deixaram de gerar juros para o devedor. O valor corrigido mostra quanto ele economizou ao pagar nessa data.</div>`}
+    </section>`;
+  });
+
+  const datas = [...new Set(st.itens.map(i => i.d))];
+  let ant = 0, linhas = '';
+  datas.forEach((d, k) => {
+    const antes = saldoEm(d, false), depois = saldoEm(d, true);
+    const juros = k ? antes - ant : 0;
+    const ev = st.itens.filter(i => i.d === d)
+      .map(i => `<span class="${i.t === 'Pagamento' ? 'neg' : 'pos'}">${i.t === 'Pagamento' ? '− Recebido ' : '+ Emprestado '}${brl(i.v)}</span>`).join('<br>');
+    linhas += `<tr><td>${fmtD(d)}</td><td>${ev}</td><td>${k ? brl(juros) : '—'}</td><td><b>${brl(depois)}</b></td></tr>`;
+    ant = depois;
+  });
+  const final = saldoEm(h, true);
+  linhas += `<tr><td><b>${fmtD(h)}</b></td><td>Hoje</td><td>${brl(final - ant)}</td><td><b>${brl(final)}</b></td></tr>`;
+  html += `<section class="card tag-r"><h3>🕒 Linha do tempo do saldo a receber</h3>
+    <div class="table-wrap"><table><thead><tr><th>Data</th><th>Evento</th><th>Juros no período</th><th>Saldo a receber</th></tr></thead>
+    <tbody>${linhas}</tbody></table></div>
+    <div class="hint">"Juros no período" são os juros a receber que correram desde o evento anterior. Cada pagamento recebido aparece abatendo o saldo na data em que foi feito.</div></section>`;
+
+  html += `<section class="card tag-r"><h3>📋 Resumo final</h3>
+    ${kv('Emprestado (original)', brl(oE))}
+    ${kv('+ Juros a receber', brl(aE - oE))}
+    ${kv('= Empréstimos atualizados', brl(aE))}
+    ${kv('Pagamentos recebidos (original)', brl(oP))}
+    ${kv('+ Juros que deixaram de correr', brl(aP - oP))}
+    ${kv('= Pagamentos atualizados', brl(aP))}
+    <div class="formula">${brl(aE)} − ${brl(aP)}</div>
+    ${kv('Saldo a receber hoje', brl(aE - aP), 'total')}
+  </section>`;
+  $('calcConteudo').innerHTML = html;
+}
+function rota() {
+  const c = location.hash === '#calculo';
+  $('app').hidden = c; $('calc').hidden = !c;
+  if (c) renderCalc();
+  window.scrollTo(0, 0);
+}
+$('btnCalc').addEventListener('click', () => { location.hash = 'calculo'; });
+$('btnVoltar').addEventListener('click', () => { location.hash = ''; });
+window.addEventListener('hashchange', rota);
+
 $('data').value = dataLocalISO();
 render();
+rota();
 </script>
 </body>
 </html>
