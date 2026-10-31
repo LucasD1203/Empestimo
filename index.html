@@ -58,6 +58,7 @@
   <div class="sub" id="hoje"></div>
   <div class="sub" id="juroDia"></div>
   <button type="button" class="azul" id="btnCalc">📊 Ver cálculo detalhado</button>
+  <button type="button" class="pag" id="btnLucro">📈 Ver análise de lucro</button>
 </section>
 
 <section class="card">
@@ -116,6 +117,12 @@
   <button type="button" class="secondary" id="btnVoltar" style="margin:0 0 12px">← Voltar</button>
   <h1>📊 Memória de Cálculo</h1>
   <div id="calcConteudo"></div>
+</main>
+
+<main id="lucro" class="calc" hidden>
+  <button type="button" class="secondary" id="btnVoltar2" style="margin:0 0 12px">← Voltar</button>
+  <h1>📈 Análise de Lucro</h1>
+  <div id="lucroConteudo"></div>
 </main>
 
 <script>
@@ -348,14 +355,97 @@ function renderCalc() {
   </section>`;
   $('calcConteudo').innerHTML = html;
 }
+
+/* ===== Análise de Lucro ===== */
+const pct = n => (n * 100).toLocaleString('pt-BR', {maximumFractionDigits: 2}) + '%';
+const somaV = a => a.reduce((s, i) => s + i.v, 0);
+function proxMes(iso) {
+  const [y, m] = iso.split('-').map(Number);
+  return dataLocalISO(new Date(y, m, 1));
+}
+function renderLucro() {
+  st.itens.sort((a,b) => a.d.localeCompare(b.d));
+  const h = dataLocalISO(), el = $('lucroConteudo');
+  const itens = st.itens.filter(i => i.d <= h);
+  const emp = itens.filter(i => i.t === 'Empréstimo');
+  const pag = itens.filter(i => i.t === 'Pagamento');
+  if (!emp.length) { el.innerHTML = '<div class="card empty">Nenhum empréstimo cadastrado.</div>'; return; }
+
+  const oE = somaV(emp), oP = somaV(pag);
+  const saldo = saldoEm(h, true);
+  const lucroTotal = saldo + oP - oE;
+  const realizado = Math.max(0, oP - oE);
+  const aRealizar = lucroTotal - realizado;
+  const capAberto = Math.max(0, oE - oP);
+  const ini = emp[0].d, dTot = diasEntre(ini, h), meses = Math.max(dTot / 30, 1/30);
+  const roi = lucroTotal / oE;
+  const roiMesSimples = roi / meses;
+  const roiMesComp = Math.pow(1 + roi, 1 / meses) - 1;
+  const recuperado = Math.min(1, oP / oE);
+
+  let html = `<section class="card tag-r"><h3>💼 Visão geral</h3>
+    ${kv('Período da operação', fmtD(ini) + ' → ' + fmtD(h))}
+    ${kv('Duração', dTot + ' dias = ' + num(meses, 2) + ' mês(es)')}
+    ${kv('Total emprestado', brl(oE))}
+    ${kv('Total recebido', brl(oP))}
+    ${kv('Saldo a receber hoje', brl(saldo))}
+    ${kv('Capital ainda não recuperado', brl(capAberto))}
+    ${kv('Capital recuperado', pct(recuperado))}
+  </section>
+
+  <section class="card tag-p"><h3>💰 Lucro</h3>
+    ${kv('Lucro realizado (já recebido)', brl(realizado))}
+    ${kv('Lucro a realizar (no saldo)', brl(aRealizar))}
+    ${kv('Lucro total', brl(lucroTotal), 'total')}
+    <div class="formula">Lucro total = Saldo + Recebido − Emprestado<br>= ${brl(saldo)} + ${brl(oP)} − ${brl(oE)}</div>
+    <div class="hint">Os pagamentos primeiro devolvem o capital emprestado. Só o que passa disso conta como lucro realizado.</div>
+  </section>
+
+  <section class="card tag-r"><h3>📊 Rentabilidade</h3>
+    ${kv('Retorno total sobre o emprestado', pct(roi))}
+    ${kv('Lucro médio por mês', brl(lucroTotal / meses))}
+    ${kv('Lucro médio por dia', brl(lucroTotal / Math.max(dTot, 1)))}
+    ${kv('Rentabilidade mensal média (simples)', pct(roiMesSimples))}
+    ${kv('Rentabilidade mensal equivalente (composta)', pct(roiMesComp))}
+    ${kv('Projeção do lucro em 12 meses (ritmo atual)', brl(lucroTotal / meses * 12))}
+    <div class="hint">Se houve empréstimos em datas diferentes, a rentabilidade usa o total emprestado e o período desde o primeiro empréstimo. É uma média aproximada.</div>
+  </section>`;
+
+  let linhas = '', ant = 0, acum = 0;
+  for (let a = ini.slice(0, 7) + '-01'; a <= h; a = proxMes(a)) {
+    const b = proxMes(a);
+    const sFim = b > h ? saldo : saldoEm(b, false);
+    const noMes = itens.filter(i => i.d >= a && i.d < b);
+    const e = somaV(noMes.filter(i => i.t === 'Empréstimo'));
+    const p = somaV(noMes.filter(i => i.t === 'Pagamento'));
+    const juros = sFim - ant - e + p;
+    acum += juros;
+    const nome = new Date(a + 'T00:00:00').toLocaleDateString('pt-BR', {month: 'short', year: '2-digit'});
+    linhas += `<tr><td>${nome}${b > h ? ' *' : ''}</td><td class="pos">${e ? brl(e) : '—'}</td><td class="neg">${p ? brl(p) : '—'}</td><td>${brl(juros)}</td><td><b>${brl(acum)}</b></td></tr>`;
+    ant = sFim;
+  }
+  html += `<section class="card tag-r"><h3>🗓️ Lucro mês a mês</h3>
+    <div class="table-wrap"><table><thead><tr><th>Mês</th><th>Emprestado</th><th>Recebido</th><th>Juros no mês</th><th>Lucro acumulado</th></tr></thead>
+    <tbody>${linhas}</tbody></table></div>
+    <div class="hint">* Mês atual, calculado até hoje. "Juros no mês" é o lucro gerado no mês, recebido ou não.</div></section>`;
+
+  el.innerHTML = html;
+}
+
+/* ===== Navegação ===== */
 function rota() {
-  const c = location.hash === '#calculo';
-  $('app').hidden = c; $('calc').hidden = !c;
-  if (c) renderCalc();
+  const p = location.hash;
+  $('app').hidden = p === '#calculo' || p === '#lucro';
+  $('calc').hidden = p !== '#calculo';
+  $('lucro').hidden = p !== '#lucro';
+  if (p === '#calculo') renderCalc();
+  if (p === '#lucro') renderLucro();
   window.scrollTo(0, 0);
 }
 $('btnCalc').addEventListener('click', () => { location.hash = 'calculo'; });
+$('btnLucro').addEventListener('click', () => { location.hash = 'lucro'; });
 $('btnVoltar').addEventListener('click', () => { location.hash = ''; });
+$('btnVoltar2').addEventListener('click', () => { location.hash = ''; });
 window.addEventListener('hashchange', rota);
 
 $('data').value = dataLocalISO();
