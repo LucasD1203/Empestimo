@@ -13,44 +13,147 @@
 <title>Controle de Empréstimo</title>
 <style>
   *{box-sizing:border-box}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom));background:#f2f2f7;color:#111}
+  body{--bg:#f2f2f7;--card:#fff;--txt:#111;--sub:#666;--bd:#e5e5ea;--in:#fff;--inbd:#ccc;--sec:#e5e5ea;--sectx:#222;--ok:#168447;--bad:#c0392b;--acc:#007aff;--acc2:#66b0ff;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom));background:var(--bg);color:var(--txt);color-scheme:light}
+  body.escuro{color-scheme:dark}
+  body.s-normal.escuro{--bg:#000;--card:#1c1c1e;--txt:#f2f2f7;--sub:#a1a1a6;--bd:#2c2c2e;--in:#2c2c2e;--inbd:#3a3a3c;--sec:#3a3a3c;--sectx:#f2f2f7;--ok:#30d158;--bad:#ff6b5e}
   main{max-width:760px;margin:0 auto}
   [hidden]{display:none!important}
   h1{font-size:22px;margin:0 0 12px}
-  .card{background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 1px 3px #0001;overflow:hidden}
-  .saldo{font-size:clamp(26px,7vw,34px);font-weight:700;color:#007aff;overflow-wrap:anywhere}
-  .sub{color:#666;font-size:14px;margin-top:4px}
-  label{display:block;font-size:13px;color:#555;margin-top:8px;margin-bottom:4px}
-  input,select,button{display:block;width:100%;max-width:100%;min-width:0;padding:11px;font-size:16px;border:1px solid #ccc;border-radius:10px;background:#fff;color:#111}
+  .topo{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+  .topo h1{margin:0}
+  .topo button{width:auto;margin:0;padding:8px 12px;font-size:20px}
+  .card{background:var(--card);border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 1px 3px #0001;overflow:hidden}
+  .card h3{font-size:16px;margin:0 0 8px}
+  .saldo{font-size:clamp(26px,7vw,34px);font-weight:700;color:var(--acc);overflow-wrap:anywhere}
+  .sub{color:var(--sub);font-size:14px;margin-top:4px}
+  label{display:block;font-size:13px;color:var(--sub);margin-top:8px;margin-bottom:4px}
+  input,select,button,textarea{display:block;width:100%;max-width:100%;min-width:0;padding:11px;font-size:16px;border:1px solid var(--inbd);border-radius:10px;background:var(--in);color:var(--txt);font-family:inherit}
+  textarea{resize:vertical;font-size:13px;line-height:1.4}
   input[type=date]{-webkit-appearance:none;appearance:none;min-height:44px;text-align:left}
   input[type=date]::-webkit-date-and-time-value{text-align:left}
+  input[type=color]{height:44px;padding:3px}
   button{color:#fff;border:none;margin-top:12px;font-weight:600;cursor:pointer;min-height:44px}
   button:active{opacity:.82}
-  .emp{background:#c0392b}.pag{background:#27ae60}.azul{background:#007aff}.cinza{background:#8e8e93}
+  button:disabled{opacity:.45}
+  .emp{background:#c0392b}.pag{background:#27ae60}.azul{background:var(--acc)}.cinza{background:#8e8e93}
+  .secondary{background:var(--sec);color:var(--sectx)}
   table{width:100%;border-collapse:collapse;font-size:13px}
-  td,th{padding:8px 5px;border-bottom:1px solid #eee;text-align:left;overflow-wrap:anywhere}
-  th{font-size:12px;color:#666}
-  .neg{color:#168447}.pos{color:#c0392b}
-  .del{background:none;color:#c0392b;border:none;width:auto;min-height:32px;margin:0;padding:4px 8px;font-size:18px}
+  td,th{padding:8px 5px;border-bottom:1px solid var(--bd);text-align:left;overflow-wrap:anywhere}
+  th{font-size:12px;color:var(--sub)}
+  .neg{color:var(--ok)}.pos{color:var(--bad)}
+  .obs{font-size:11px;color:var(--sub);margin-top:2px}
+  .acoes{white-space:nowrap}
   .row{display:flex;gap:8px;align-items:stretch}
   .row>*{flex:1;min-width:0}
   .table-wrap{overflow-x:auto}
-  .empty{text-align:center;color:#777;padding:18px 8px}
-  .hint{font-size:12px;color:#666;line-height:1.4;margin-top:8px}
-  .secondary{background:#e5e5ea;color:#222}
-  .calc h3{font-size:16px;margin:0 0 8px}
-  .kv{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #eee;font-size:14px}
-  .kv span:first-child{color:#666}
+  .empty{text-align:center;color:var(--sub);padding:18px 8px}
+  .hint{font-size:12px;color:var(--sub);line-height:1.4;margin-top:8px}
+  .kv{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd);font-size:14px}
+  .kv span:first-child{color:var(--sub)}
   .kv b{text-align:right}
   .kv.total{font-weight:700;font-size:15px;border-bottom:none}
-  .formula{background:#f2f2f7;border-radius:8px;padding:9px;font-family:ui-monospace,Menlo,monospace;font-size:13px;margin:8px 0;overflow-wrap:anywhere;line-height:1.5}
-  .tag-e{border-left:5px solid #c0392b}.tag-p{border-left:5px solid #27ae60}.tag-r{border-left:5px solid #007aff}
+  .formula{background:rgba(127,127,127,.13);border-radius:8px;padding:9px;font-family:ui-monospace,Menlo,monospace;font-size:13px;margin:8px 0;overflow-wrap:anywhere;line-height:1.5}
+  .tag-e{border-left:5px solid #c0392b}.tag-p{border-left:5px solid #27ae60}.tag-r{border-left:5px solid var(--acc)}
+  .aviso{border-left:5px solid #ff9500}
+  canvas{display:block;width:100%;height:180px}
+  .swatches{display:flex;flex-wrap:wrap;gap:10px}
+  .modal{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;padding:16px;z-index:1000}
+  .modal .card{width:100%;max-width:440px;max-height:90vh;overflow:auto;margin:0}
+  .lock{position:fixed;inset:0;background:inherit;z-index:900;display:flex;align-items:center;justify-content:center;padding:16px}
+  .lock .card{width:100%;max-width:360px}
+
+  /* ===== Vintage: barra de título das janelas ===== */
+  .s-98 .card::before,.s-xp .card::before,.s-vista .card::before{content:"—  ▢  ✕";display:block;text-align:right;color:#fff;font-size:11px;letter-spacing:3px;padding-right:6px;font-family:Tahoma,sans-serif}
+  .s-98 h1,.s-xp h1,.s-vista h1{color:#fff;text-shadow:1px 1px 2px #0009}
+
+  /* ===== Windows 98 ===== */
+  body.s-98{font-family:Tahoma,"MS Sans Serif",Geneva,sans-serif;--bg:#008080;--card:#c0c0c0;--txt:#000;--sub:#222;--bd:#808080;--in:#fff;--inbd:#808080;--sec:#c0c0c0;--sectx:#000;--ok:#006400;--bad:#a00000}
+  body.s-98.escuro{--bg:#1e1e1e;--card:#3a3a3a;--txt:#eee;--sub:#bbb;--bd:#555;--in:#1a1a1a;--sec:#3a3a3a;--sectx:#eee;--ok:#5fd35f;--bad:#ff7a7a}
+  .s-98 .card{border-radius:0;padding:12px;box-shadow:inset -1px -1px #0a0a0a,inset 1px 1px #dfdfdf,inset -2px -2px #808080,inset 2px 2px #fff}
+  .s-98 .card::before{height:20px;line-height:20px;margin:-9px -9px 10px;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+  .s-98 button{background:var(--card);color:var(--txt);border-radius:0;border:none;font-weight:400;box-shadow:inset -1px -1px #0a0a0a,inset 1px 1px #fff,inset -2px -2px #808080,inset 2px 2px #dfdfdf}
+  .s-98 button:active{opacity:1;box-shadow:inset 1px 1px #0a0a0a,inset -1px -1px #fff,inset 2px 2px #808080}
+  .s-98 button.emp{color:var(--bad);font-weight:700}.s-98 button.pag{color:var(--ok);font-weight:700}.s-98 button.azul{color:var(--acc);font-weight:700}
+  .s-98 input,.s-98 select,.s-98 textarea{border-radius:0;border:none;box-shadow:inset 1px 1px #808080,inset -1px -1px #fff,inset 2px 2px #0a0a0a}
+
+  /* ===== Windows XP ===== */
+  body.s-xp{font-family:Tahoma,Verdana,sans-serif;--bg:#245edb;--card:#ece9d8;--txt:#000;--sub:#444;--bd:#cfc9b2;--in:#fff;--inbd:#7f9db9;--sec:#ece9d8;--sectx:#000;background:linear-gradient(#245edb 0,#6aa6f0 42%,#9fd06a 62%,#4a8f22 100%) fixed}
+  body.s-xp.escuro{--bg:#0b1a3a;--card:#2b2b2b;--txt:#eee;--sub:#bbb;--bd:#444;--in:#1c1c1c;--inbd:#556;--sec:#3a3a3a;--sectx:#eee;--ok:#6fdc6f;--bad:#ff8080;background:linear-gradient(#0b1a3a,#1d2f55 55%,#1f3a14) fixed}
+  .s-xp .card{border-radius:8px 8px 3px 3px;border:3px solid var(--acc);border-top:none;padding:12px;box-shadow:0 4px 12px #0005}
+  .s-xp .card::before{height:26px;line-height:26px;margin:-12px -15px 10px;border-radius:7px 7px 0 0;background:linear-gradient(var(--acc2),var(--acc) 45%,var(--acc) 85%,var(--acc2))}
+  .s-xp button{background:linear-gradient(#fff,#ece9d8 85%,#d6d0bc);color:#000;border:1px solid #003c74;border-radius:3px;font-weight:400}
+  .s-xp.escuro button{background:linear-gradient(#555,#333);color:#eee;border-color:#111}
+  .s-xp button.emp{background:linear-gradient(#f08a7a,#c0392b);color:#fff}
+  .s-xp button.pag{background:linear-gradient(#6ccb4f,#2f8a1b);color:#fff;font-weight:700;font-style:italic}
+  .s-xp button.azul{background:linear-gradient(var(--acc2),var(--acc));color:#fff}
+  .s-xp input,.s-xp select,.s-xp textarea{border-radius:2px}
+
+  /* ===== Windows Vista (Aero) ===== */
+  body.s-vista{font-family:"Segoe UI",Tahoma,sans-serif;--bg:#0c3d63;--card:rgba(255,255,255,.84);--txt:#000;--sub:#333;--bd:rgba(0,0,0,.13);--in:#fff;--inbd:#8e8f8f;--sec:#e8e8e8;--sectx:#000;
+    background:radial-gradient(ellipse at 20% 0%,#3fa9d6 0,transparent 55%),radial-gradient(ellipse at 90% 100%,#2d8a3e 0,transparent 50%),linear-gradient(#0c3d63,#04121f) fixed}
+  body.s-vista.escuro{--card:rgba(20,24,32,.82);--txt:#f0f0f0;--sub:#b8c2cc;--bd:rgba(255,255,255,.13);--in:rgba(0,0,0,.45);--inbd:#556;--sec:#333;--sectx:#eee;--ok:#5fe07a;--bad:#ff8577}
+  .s-vista .card{border-radius:8px;padding:12px;border:1px solid rgba(255,255,255,.6);box-shadow:0 0 0 1px rgba(0,0,0,.55),0 10px 28px rgba(0,0,0,.5);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+  .s-vista .card::before{height:26px;line-height:26px;margin:-12px -12px 10px;background:linear-gradient(rgba(255,255,255,.55),rgba(255,255,255,.15) 50%,transparent 51%),var(--acc)}
+  .s-vista button{background:linear-gradient(#f2f2f2,#ebebeb 49%,#ddd 50%,#cfcfcf);color:#000;border:1px solid #707070;border-radius:3px;font-weight:400;box-shadow:inset 0 0 0 1px #fff8}
+  .s-vista button.emp{background:linear-gradient(#f3a296,#e25a47 49%,#c0392b 50%,#a52a1d);color:#fff}
+  .s-vista button.pag{background:linear-gradient(#9be08a,#4cb33a 49%,#2f8a1b 50%,#25751a);color:#fff}
+  .s-vista button.azul{background:linear-gradient(rgba(255,255,255,.45),rgba(255,255,255,.1) 50%,transparent 51%),var(--acc);color:#fff}
+  .s-vista input,.s-vista select,.s-vista textarea{border-radius:3px}
+
+  /* ===== Botões especiais (valem para todos os estilos) ===== */
+  body button.del{background:none;box-shadow:none;border:none;color:var(--bad);width:auto;min-height:32px;margin:0;padding:4px 8px;font-size:18px;display:inline-block}
+  body button.del.ed{color:var(--acc)}
+  body button.sw{width:38px;height:38px;min-height:0;margin:0;padding:0;border-radius:50%;border:2px solid var(--bd);box-shadow:none}
+  body button.sw.on{outline:3px solid var(--txt);outline-offset:2px}
+
   @media(max-width:380px){body{padding:10px}.card{padding:11px}.row{gap:6px}table{font-size:12px}td,th{padding:7px 3px}}
 </style>
 </head>
-<body>
+<body class="s-normal">
+
+<!-- Tela de bloqueio -->
+<div id="lock" class="lock" hidden>
+  <section class="card">
+    <h3 style="text-align:center">🔒 App bloqueado</h3>
+    <label for="pinIn">Digite seu PIN</label>
+    <input id="pinIn" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off">
+    <button type="button" class="azul" id="btnEntrar">Desbloquear</button>
+    <button type="button" class="secondary" id="btnEsqueci">Esqueci meu PIN</button>
+    <div class="hint" id="lockMsg" style="color:var(--bad)"></div>
+  </section>
+</div>
+
+<!-- Janela genérica -->
+<div id="modal" class="modal" hidden>
+  <section class="card"><h3 id="mTit"></h3><div id="mCorpo"></div><div id="mBot"></div></section>
+</div>
+
 <main id="app">
-<h1>💰 Controle de Empréstimo</h1>
+<div class="topo">
+  <h1>💰 Controle de Empréstimo</h1>
+  <button type="button" class="secondary" id="btnCfg" aria-label="Configurações">⚙️</button>
+</div>
+
+<section class="card aviso" id="aviso" hidden>
+  <h3>⚠️ Hora de fazer backup</h3>
+  <div class="sub" id="avisoTxt"></div>
+  <div class="row">
+    <button type="button" class="azul" id="avisoExp">⬇️ Exportar agora</button>
+    <button type="button" class="secondary" id="avisoAdiar">Lembrar em 7 dias</button>
+  </div>
+</section>
+
+<section class="card">
+  <label for="dev" style="margin-top:0">Devedor</label>
+  <select id="dev"></select>
+  <div class="row">
+    <button type="button" class="azul" id="btnNovoDev">+ Novo</button>
+    <button type="button" class="secondary" id="btnRenDev">✎ Renomear</button>
+    <button type="button" class="secondary" id="btnDelDev">🗑 Excluir</button>
+  </div>
+  <div class="sub" id="totalGeral" hidden></div>
+</section>
 
 <section class="card" aria-label="Resumo do valor a receber">
   <div class="sub">Saldo a receber (atualizado)</div>
@@ -59,6 +162,19 @@
   <div class="sub" id="juroDia"></div>
   <button type="button" class="azul" id="btnCalc">📊 Ver cálculo detalhado</button>
   <button type="button" class="pag" id="btnLucro">📈 Ver análise de lucro</button>
+  <button type="button" class="cinza" id="btnShare">📤 Compartilhar extrato</button>
+</section>
+
+<section class="card">
+  <h3>📉 Evolução do saldo</h3>
+  <canvas id="graf"></canvas>
+</section>
+
+<section class="card">
+  <h3>🧮 Simulador de quitação</h3>
+  <label for="simData">Data da quitação</label>
+  <input id="simData" type="date">
+  <div id="simRes"></div>
 </section>
 
 <section class="card">
@@ -75,7 +191,7 @@
       </select>
     </div>
   </div>
-  <div class="hint">A taxa e o tipo de juros são aplicados a todos os lançamentos, desde a data de cada um.</div>
+  <div class="hint">A taxa e o tipo de juros valem para todos os lançamentos deste devedor, desde a data de cada um.</div>
 </section>
 
 <section class="card">
@@ -83,15 +199,17 @@
   <input id="data" type="date" required>
   <label for="valor">Valor (R$)</label>
   <input id="valor" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0,00" required>
+  <label for="obs">Observação (opcional)</label>
+  <input id="obs" maxlength="80" placeholder="Ex.: Pix, dinheiro, parcela 3">
   <div class="row">
     <button type="button" class="emp" id="btnEmp">+ Empréstimo</button>
     <button type="button" class="pag" id="btnPag">− Pagamento recebido</button>
   </div>
-  <div class="hint">Cada pagamento recebido é abatido na data em que foi feito. A partir daí, os juros deixam de correr sobre esse valor. Confira os lançamentos antes de usar o total como valor para quitação.</div>
+  <div class="hint">Cada pagamento recebido é abatido na data em que foi feito, e a partir daí os juros param de correr sobre ele.</div>
 </section>
 
 <section class="card">
-  <h2 style="font-size:17px;margin:0 0 10px">Lançamentos</h2>
+  <h3>Lançamentos</h3>
   <div class="table-wrap">
     <table>
       <thead><tr><th>Data</th><th>Tipo / valor</th><th>Atualizado</th><th aria-label="Ações"></th></tr></thead>
@@ -102,27 +220,58 @@
 </section>
 
 <section class="card">
-  <div class="sub">Backup dos dados</div>
+  <div class="sub">Backup dos dados (todos os devedores)</div>
   <div class="row">
     <button type="button" class="azul" id="btnExportar">⬇️ Exportar</button>
     <button type="button" class="cinza" id="btnImportar">⬆️ Importar</button>
   </div>
   <input id="arq" type="file" accept=".json,application/json" hidden>
-  <button type="button" class="secondary" id="btnLimpar">Limpar todos os lançamentos</button>
-  <div class="hint">Os dados ficam salvos neste navegador e neste aparelho. Exporte um backup regularmente, especialmente antes de trocar de celular ou limpar os dados do navegador.</div>
+  <button type="button" class="secondary" id="btnLimpar">Limpar lançamentos deste devedor</button>
+  <div class="hint" id="ultBk"></div>
+  <div class="hint">Os dados ficam salvos só neste navegador e neste aparelho.</div>
 </section>
 </main>
 
-<main id="calc" class="calc" hidden>
-  <button type="button" class="secondary" id="btnVoltar" style="margin:0 0 12px">← Voltar</button>
+<main id="calc" hidden>
+  <button type="button" class="secondary voltar" style="margin:0 0 12px">← Voltar</button>
   <h1>📊 Memória de Cálculo</h1>
   <div id="calcConteudo"></div>
 </main>
 
-<main id="lucro" class="calc" hidden>
-  <button type="button" class="secondary" id="btnVoltar2" style="margin:0 0 12px">← Voltar</button>
+<main id="lucro" hidden>
+  <button type="button" class="secondary voltar" style="margin:0 0 12px">← Voltar</button>
   <h1>📈 Análise de Lucro</h1>
   <div id="lucroConteudo"></div>
+</main>
+
+<main id="config" hidden>
+  <button type="button" class="secondary voltar" style="margin:0 0 12px">← Voltar</button>
+  <h1>⚙️ Configurações</h1>
+  <section class="card">
+    <h3>🎨 Aparência</h3>
+    <label for="tEst">Estilo</label>
+    <select id="tEst">
+      <option value="normal">Normal (moderno)</option>
+      <option value="98">Vintage: Windows 98</option>
+      <option value="xp">Vintage: Windows XP</option>
+      <option value="vista">Vintage: Windows Vista (Aero)</option>
+    </select>
+    <label for="tModo">Modo</label>
+    <select id="tModo">
+      <option value="claro">☀️ Claro</option>
+      <option value="escuro">🌙 Escuro</option>
+    </select>
+    <label>Cor de destaque</label>
+    <div class="swatches" id="tCores"></div>
+    <label for="tCor">Cor personalizada</label>
+    <input id="tCor" type="color">
+    <button type="button" class="secondary" id="tReset">Restaurar aparência padrão</button>
+  </section>
+  <section class="card">
+    <h3>🔐 Bloqueio com PIN</h3>
+    <div id="segArea"></div>
+    <div class="hint">O PIN impede que outras pessoas abram o app neste aparelho. Guarde o código de recuperação em local seguro, fora do celular.</div>
+  </section>
 </main>
 
 <script>
@@ -131,106 +280,360 @@ const KEY = 'divida_v1';
 const $ = id => document.getElementById(id);
 const brl = n => Number(n).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
 const hoje = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function dataLocalISO(d = new Date()) {
-  const ano = d.getFullYear();
-  const mes = String(d.getMonth()+1).padStart(2,'0');
-  const dia = String(d.getDate()).padStart(2,'0');
-  return `${ano}-${mes}-${dia}`;
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-function estadoInicial() { return {taxa:7, modo:'s', itens:[]}; }
+const somaDias = n => dataLocalISO(new Date(Date.now() + n*86400000));
+const ISO = /^\d{4}-\d{2}-\d{2}$/;
+
+/* ===== Dados ===== */
+function novoDev(nome) {
+  return {id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), nome, taxa:7, modo:'s', itens:[]};
+}
+function limparItens(arr) {
+  return (Array.isArray(arr) ? arr : []).filter(i => i && ISO.test(i.d) &&
+    (i.t === 'Empréstimo' || i.t === 'Pagamento') && Number.isFinite(Number(i.v)) && Number(i.v) > 0)
+    .map(i => ({d:i.d, t:i.t, v:Math.round(Number(i.v)*100)/100, o: typeof i.o === 'string' ? i.o.slice(0,80) : ''}));
+}
+function limparDev(x, nome) {
+  const d = novoDev(x && typeof x.nome === 'string' && x.nome.trim() ? x.nome.trim().slice(0,40) : nome);
+  if (x && x.id) d.id = String(x.id);
+  const t = Number(x && x.taxa);
+  d.taxa = Number.isFinite(t) && t >= 0 ? t : 7;
+  d.modo = x && x.modo === 'c' ? 'c' : 's';
+  d.itens = limparItens(x && x.itens);
+  return d;
+}
+function limparTema(t) {
+  t = t || {};
+  return {
+    estilo: ['normal','98','xp','vista'].includes(t.estilo) ? t.estilo : 'normal',
+    modo: t.modo === 'escuro' ? 'escuro' : 'claro',
+    cor: /^#[0-9a-f]{6}$/i.test(t.cor) ? t.cor : '#007aff'
+  };
+}
+function limparSeg(s) {
+  if (!s || typeof s.salt !== 'string' || typeof s.pin !== 'string') return null;
+  return {salt:s.salt, pin:s.pin, perg:String(s.perg||''), resp:String(s.resp||''), cod:String(s.cod||''),
+    auto:[0,1,5,15,-1].includes(s.auto) ? s.auto : 1, falhas:Number(s.falhas)||0, ate:Number(s.ate)||0};
+}
+function normalizar(o) {
+  if (!o || typeof o !== 'object') return null;
+  let devs;
+  if (Array.isArray(o.devs)) devs = o.devs.map((x,i) => limparDev(x, 'Devedor ' + (i+1)));
+  else if (Array.isArray(o.itens)) devs = [limparDev(o, 'Devedor 1')];
+  else return null;
+  if (!devs.length) devs = [novoDev('Devedor 1')];
+  const ids = new Set();
+  devs.forEach(d => { while (ids.has(d.id)) d.id += 'x'; ids.add(d.id); });
+  return {devs, atual: devs.some(d => d.id === o.atual) ? o.atual : devs[0].id, tema: limparTema(o.tema)};
+}
 function carregar() {
-  try {
-    const salvo = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (salvo && Array.isArray(salvo.itens)) {
-      return {
-        taxa: Number.isFinite(Number(salvo.taxa)) ? Math.max(0, Number(salvo.taxa)) : 7,
-        modo: salvo.modo === 'c' ? 'c' : 's',
-        itens: salvo.itens.filter(i => i && /^\d{4}-\d{2}-\d{2}$/.test(i.d) &&
-          (i.t === 'Empréstimo' || i.t === 'Pagamento') &&
-          Number.isFinite(Number(i.v)) && Number(i.v) > 0)
-          .map(i => ({d:i.d, t:i.t, v:Number(i.v)}))
-      };
-    }
-  } catch (e) {}
-  return estadoInicial();
+  let o = null;
+  try { o = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+  const n = normalizar(o) || {devs:[novoDev('Devedor 1')], atual:null, tema:limparTema()};
+  return {
+    devs: n.devs, atual: n.atual || n.devs[0].id, tema: n.tema,
+    ultBackup: o && ISO.test(o.ultBackup) ? o.ultBackup : null,
+    adiar: o && ISO.test(o.adiar) ? o.adiar : null,
+    seg: limparSeg(o && o.seg)
+  };
 }
-let st = carregar();
+let db = carregar();
+const atual = () => db.devs.find(d => d.id === db.atual) || db.devs[0];
+let st = atual(); db.atual = st.id;
+
 function save() {
-  try { localStorage.setItem(KEY, JSON.stringify(st)); }
+  try { localStorage.setItem(KEY, JSON.stringify(db)); }
   catch (e) { alert('Não foi possível salvar os dados neste navegador. Exporte um backup para não perder os lançamentos.'); }
 }
+
+/* ===== Cálculos ===== */
+const fmtD = s => s.split('-').reverse().join('/');
+const num = (n, c = 4) => n.toLocaleString('pt-BR', {maximumFractionDigits: c});
+const kv = (a, b, cls = '') => `<div class="kv ${cls}"><span>${a}</span><b>${b}</b></div>`;
+const somaV = a => a.reduce((s, i) => s + i.v, 0);
 function dias(data) {
   const alvo = new Date(data + 'T00:00:00');
   return Math.max(0, Math.floor((hoje().getTime() - alvo.getTime()) / 86400000));
 }
 function atualizado(item) {
-  const r = st.taxa / 100;
-  const n = dias(item.d) / 30;
-  const fator = st.modo === 's' ? 1 + r*n : Math.pow(1+r,n);
+  const r = st.taxa / 100, n = dias(item.d) / 30;
+  const fator = st.modo === 's' ? 1 + r*n : Math.pow(1+r, n);
   const valor = item.v * fator;
   return item.t === 'Pagamento' ? -valor : valor;
+}
+function diasEntre(a, b) {
+  return Math.max(0, Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00')) / 86400000));
+}
+function fatorEntre(a, b, dev = st) {
+  const r = dev.taxa/100, n = diasEntre(a, b)/30;
+  return dev.modo === 's' ? 1 + r*n : Math.pow(1+r, n);
+}
+function saldoEm(data, incluiDia, dev = st) {
+  return dev.itens.reduce((s, it) => {
+    if (incluiDia ? it.d > data : it.d >= data) return s;
+    const v = it.v * fatorEntre(it.d, data, dev);
+    return s + (it.t === 'Pagamento' ? -v : v);
+  }, 0);
+}
+
+/* ===== Tema ===== */
+function clarear(hex, p) {
+  const n = parseInt(hex.slice(1), 16);
+  const c = [n >> 16, n >> 8 & 255, n & 255].map(x => Math.round(x + (255 - x) * p));
+  return '#' + c.map(x => x.toString(16).padStart(2,'0')).join('');
+}
+const CORES = ['#007aff','#34c759','#af52de','#ff9500','#ff2d55','#c0392b','#30b0c7','#5856d6','#0a246a','#8e8e93'];
+function aplicarTema() {
+  const t = db.tema, b = document.body;
+  b.className = 's-' + t.estilo + (t.modo === 'escuro' ? ' escuro' : '');
+  b.style.setProperty('--acc', t.cor);
+  b.style.setProperty('--acc2', clarear(t.cor, .45));
+  document.querySelector('meta[name=theme-color]').content = getComputedStyle(b).getPropertyValue('--bg').trim() || '#f2f2f7';
+}
+function renderTema() {
+  $('tEst').value = db.tema.estilo;
+  $('tModo').value = db.tema.modo;
+  $('tCor').value = db.tema.cor;
+  const box = $('tCores'); box.innerHTML = '';
+  CORES.forEach(c => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'sw' + (c.toLowerCase() === db.tema.cor.toLowerCase() ? ' on' : '');
+    b.style.background = c; b.setAttribute('aria-label', 'Cor ' + c);
+    b.addEventListener('click', () => mudarTema({cor:c}));
+    box.appendChild(b);
+  });
+}
+function mudarTema(p) { Object.assign(db.tema, p); save(); aplicarTema(); renderTema(); }
+$('tEst').addEventListener('change', e => mudarTema({estilo:e.target.value}));
+$('tModo').addEventListener('change', e => mudarTema({modo:e.target.value}));
+$('tCor').addEventListener('input', e => mudarTema({cor:e.target.value}));
+$('tReset').addEventListener('click', () => mudarTema(limparTema()));
+
+/* ===== Janela (modal) ===== */
+let mId = 0;
+function modal(titulo, corpo, botoes) {
+  const id = ++mId;
+  $('mTit').textContent = titulo;
+  $('mCorpo').innerHTML = corpo;
+  const box = $('mBot'); box.innerHTML = '';
+  botoes.forEach(x => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = x.cls || 'azul'; b.textContent = x.t;
+    b.addEventListener('click', async () => {
+      if (x.fn) { const r = await x.fn(); if (r === false) return; }
+      if (id === mId) $('modal').hidden = true;
+    });
+    box.appendChild(b);
+  });
+  $('modal').hidden = false;
+  const f = $('mCorpo').querySelector('input,select');
+  if (f) setTimeout(() => f.focus(), 60);
+}
+function pedirTexto(titulo, rotulo, valor, ok) {
+  modal(titulo, `<label for="mTxt">${rotulo}</label><input id="mTxt" maxlength="40" value="${esc(valor)}">`, [
+    {t:'Salvar', cls:'pag', fn:() => { const v = $('mTxt').value.trim(); if (!v) { alert('Informe um nome.'); return false; } ok(v.slice(0,40)); }},
+    {t:'Cancelar', cls:'secondary'}
+  ]);
+}
+
+/* ===== Tela principal ===== */
+function renderDevs() {
+  const s = $('dev'); s.innerHTML = '';
+  db.devs.forEach(d => {
+    const o = document.createElement('option'); o.value = d.id; o.textContent = d.nome; s.appendChild(o);
+  });
+  s.value = st.id;
+  $('btnDelDev').disabled = db.devs.length < 2;
+  if (db.devs.length > 1) {
+    const h = dataLocalISO();
+    const tot = db.devs.reduce((a, d) => a + saldoEm(h, true, d), 0);
+    $('totalGeral').textContent = `💼 Total geral a receber (${db.devs.length} devedores): ${brl(tot)}`;
+    $('totalGeral').hidden = false;
+  } else $('totalGeral').hidden = true;
 }
 function render() {
   $('taxa').value = st.taxa;
   $('modo').value = st.modo;
   st.itens.sort((a,b) => a.d.localeCompare(b.d));
+  renderDevs();
   let total = 0;
-  $('lista').innerHTML = '';
-  if (st.itens.length === 0) {
-    const tr = document.createElement('tr');
-    const td = document.createElement('td');
-    td.colSpan = 4; td.className = 'empty';
-    td.textContent = 'Nenhum lançamento cadastrado.';
-    tr.appendChild(td); $('lista').appendChild(tr);
+  const lista = $('lista'); lista.innerHTML = '';
+  if (!st.itens.length) {
+    const tr = document.createElement('tr'), td = document.createElement('td');
+    td.colSpan = 4; td.className = 'empty'; td.textContent = 'Nenhum lançamento cadastrado.';
+    tr.appendChild(td); lista.appendChild(tr);
   } else {
     st.itens.forEach((item, index) => {
-      const valorAtualizado = atualizado(item);
-      total += valorAtualizado;
+      const va = atualizado(item); total += va;
       const tr = document.createElement('tr');
-      const tdData = document.createElement('td');
-      tdData.textContent = item.d.split('-').reverse().join('/');
-      const tdValor = document.createElement('td');
-      tdValor.className = item.t === 'Pagamento' ? 'neg' : 'pos';
-      tdValor.textContent = (item.t === 'Pagamento' ? '− Recebido ' : '+ Emprestado ') + brl(item.v);
-      const tdAtual = document.createElement('td');
-      tdAtual.textContent = brl(valorAtualizado);
-      const tdAcao = document.createElement('td');
-      const botao = document.createElement('button');
-      botao.type = 'button'; botao.className = 'del';
-      botao.setAttribute('aria-label', 'Excluir lançamento');
-      botao.title = 'Excluir lançamento';
-      botao.textContent = '✕';
-      botao.addEventListener('click', () => excluir(index));
-      tdAcao.appendChild(botao);
-      tr.append(tdData, tdValor, tdAtual, tdAcao);
-      $('lista').appendChild(tr);
+      const tdD = document.createElement('td'); tdD.textContent = fmtD(item.d);
+      const tdV = document.createElement('td');
+      tdV.className = item.t === 'Pagamento' ? 'neg' : 'pos';
+      tdV.textContent = (item.t === 'Pagamento' ? '− Recebido ' : '+ Emprestado ') + brl(item.v);
+      if (item.o) { const o = document.createElement('div'); o.className = 'obs'; o.textContent = '📝 ' + item.o; tdV.appendChild(o); }
+      const tdA = document.createElement('td'); tdA.textContent = brl(va);
+      const tdX = document.createElement('td'); tdX.className = 'acoes';
+      const be = document.createElement('button');
+      be.type = 'button'; be.className = 'del ed'; be.textContent = '✎'; be.title = 'Editar lançamento';
+      be.setAttribute('aria-label', 'Editar lançamento');
+      be.addEventListener('click', () => editar(index));
+      const bx = document.createElement('button');
+      bx.type = 'button'; bx.className = 'del'; bx.textContent = '✕'; bx.title = 'Excluir lançamento';
+      bx.setAttribute('aria-label', 'Excluir lançamento');
+      bx.addEventListener('click', () => excluir(index));
+      tdX.append(be, bx);
+      tr.append(tdD, tdV, tdA, tdX); lista.appendChild(tr);
     });
   }
   $('saldo').textContent = brl(total);
-  $('saldo').style.color = total < 0 ? '#c0392b' : '#007aff';
+  $('saldo').style.color = total < 0 ? 'var(--bad)' : '';
   $('hoje').textContent = '📅 Calculado em: ' + hoje().toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'2-digit', year:'numeric'});
   $('juroDia').textContent = 'Juros a receber por dia (estimado): ' + brl(total * st.taxa / 100 / 30);
   $('contagem').textContent = `${st.itens.length} lançamento(s)`;
+  $('btnLimpar').textContent = `Limpar lançamentos de ${st.nome}`;
+  $('ultBk').textContent = db.ultBackup ? '🗂️ Último backup: ' + fmtD(db.ultBackup) : '🗂️ Nenhum backup feito ainda.';
+  checarBackup(); simular(); grafico();
 }
 function adicionar(tipo) {
-  const v = Number($('valor').value);
-  const d = $('data').value;
+  const v = Number($('valor').value), d = $('data').value;
   if (!d) { alert('Informe a data do lançamento.'); $('data').focus(); return; }
   if (!Number.isFinite(v) || v <= 0) { alert('Informe um valor maior que zero.'); $('valor').focus(); return; }
   if (d > dataLocalISO() && !confirm('A data informada é futura. Deseja registrar mesmo assim?')) return;
-  st.itens.push({d, t:tipo, v:Math.round(v*100)/100});
-  save(); $('valor').value = ''; render();
+  st.itens.push({d, t:tipo, v:Math.round(v*100)/100, o:$('obs').value.trim().slice(0,80)});
+  save(); $('valor').value = ''; $('obs').value = ''; render();
 }
 function excluir(index) {
   if (confirm('Excluir este lançamento?')) { st.itens.splice(index, 1); save(); render(); }
 }
+function editar(index) {
+  const it = st.itens[index];
+  modal('Editar lançamento', `
+    <label for="eD">Data</label><input id="eD" type="date" value="${it.d}">
+    <label for="eT">Tipo</label><select id="eT"><option value="Empréstimo">Empréstimo</option><option value="Pagamento">Pagamento recebido</option></select>
+    <label for="eV">Valor (R$)</label><input id="eV" type="number" min="0.01" step="0.01" inputmode="decimal" value="${it.v}">
+    <label for="eO">Observação</label><input id="eO" maxlength="80" value="${esc(it.o)}">`, [
+    {t:'Salvar alteração', cls:'pag', fn:() => {
+      const d = $('eD').value, v = Number($('eV').value);
+      if (!d) { alert('Informe a data.'); return false; }
+      if (!Number.isFinite(v) || v <= 0) { alert('Informe um valor maior que zero.'); return false; }
+      st.itens[index] = {d, t:$('eT').value, v:Math.round(v*100)/100, o:$('eO').value.trim().slice(0,80)};
+      save(); render();
+    }},
+    {t:'Cancelar', cls:'secondary'}
+  ]);
+  $('eT').value = it.t;
+}
+
+/* ===== Devedores ===== */
+$('dev').addEventListener('change', e => { db.atual = e.target.value; st = atual(); save(); render(); });
+$('btnNovoDev').addEventListener('click', () => pedirTexto('Novo devedor', 'Nome', '', nome => {
+  const d = novoDev(nome); db.devs.push(d); db.atual = d.id; st = d; save(); render();
+}));
+$('btnRenDev').addEventListener('click', () => pedirTexto('Renomear devedor', 'Nome', st.nome, nome => {
+  st.nome = nome; save(); render();
+}));
+$('btnDelDev').addEventListener('click', () => {
+  if (db.devs.length < 2) return;
+  if (!confirm(`Excluir "${st.nome}" e todos os lançamentos dele?`)) return;
+  db.devs = db.devs.filter(d => d !== st); st = db.devs[0]; db.atual = st.id; save(); render();
+});
+
+/* ===== Gráfico ===== */
+const abrev = v => Math.abs(v) >= 1000 ? (v/1000).toLocaleString('pt-BR', {maximumFractionDigits:1}) + ' mil' : Math.round(v).toLocaleString('pt-BR');
+function grafico() {
+  const c = $('graf'), w = c.clientWidth, hh = 180;
+  if (!w) return;
+  const r = window.devicePixelRatio || 1, ctx = c.getContext('2d');
+  c.width = w*r; c.height = hh*r; ctx.setTransform(r,0,0,r,0,0); ctx.clearRect(0,0,w,hh);
+  const cs = getComputedStyle(document.body);
+  const acc = cs.getPropertyValue('--acc').trim(), sub = cs.getPropertyValue('--sub').trim(), bd = cs.getPropertyValue('--bd').trim();
+  const h = dataLocalISO(), its = st.itens.filter(i => i.d <= h);
+  ctx.font = '11px sans-serif'; ctx.fillStyle = sub;
+  if (!its.length) { ctx.textAlign = 'center'; ctx.fillText('Sem dados para o gráfico', w/2, hh/2); return; }
+  const ini = its[0].d, tot = Math.max(1, diasEntre(ini, h)), N = Math.min(tot, 80);
+  const t0 = new Date(ini + 'T00:00:00');
+  const isoDe = k => { const d = new Date(t0); d.setDate(d.getDate() + k); return dataLocalISO(d); };
+  const offs = new Set();
+  for (let k = 0; k <= N; k++) offs.add(Math.round(k*tot/N));
+  its.forEach(i => { const o = diasEntre(ini, i.d); offs.add(o); if (o > 0) offs.add(o - 1); });
+  const pts = [...offs].sort((a,b) => a-b).map(o => [o, saldoEm(isoDe(o), true)]);
+  const vals = pts.map(p => p[1]), max = Math.max(...vals, 0), min = Math.min(...vals, 0);
+  const L = 52, R = 8, T = 10, B = 22, W = w-L-R, H = hh-T-B;
+  const X = x => L + x/tot*W, Y = y => T + (max-y)/((max-min)||1)*H;
+  ctx.strokeStyle = bd; ctx.lineWidth = 1; ctx.textAlign = 'right';
+  for (let g = 0; g <= 3; g++) {
+    const v = min + (max-min)*g/3, y = Y(v);
+    ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(w-R, y); ctx.stroke();
+    ctx.fillText(abrev(v), L-4, y+4);
+  }
+  ctx.textAlign = 'left'; ctx.fillText(fmtD(ini), L, hh-6);
+  ctx.textAlign = 'right'; ctx.fillText('Hoje', w-R, hh-6);
+  ctx.beginPath();
+  pts.forEach((p, i) => i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1])));
+  ctx.strokeStyle = acc; ctx.lineWidth = 2; ctx.stroke();
+  ctx.lineTo(X(pts[pts.length-1][0]), Y(0)); ctx.lineTo(X(pts[0][0]), Y(0)); ctx.closePath();
+  ctx.globalAlpha = .15; ctx.fillStyle = acc; ctx.fill(); ctx.globalAlpha = 1;
+  its.forEach(i => {
+    ctx.beginPath(); ctx.arc(X(diasEntre(ini, i.d)), Y(saldoEm(i.d, true)), 3.5, 0, 7);
+    ctx.fillStyle = i.t === 'Pagamento' ? '#27ae60' : '#c0392b'; ctx.fill();
+  });
+}
+window.addEventListener('resize', () => { if (!$('app').hidden) grafico(); });
+
+/* ===== Simulador ===== */
+function simular() {
+  const d = $('simData').value, h = dataLocalISO(), el = $('simRes');
+  if (!d) { el.innerHTML = ''; return; }
+  if (d < h) { el.innerHTML = '<div class="hint">Escolha uma data a partir de hoje.</div>'; return; }
+  const s0 = saldoEm(h, true), s = saldoEm(d, true);
+  el.innerHTML = kv('Dias a partir de hoje', diasEntre(h, d) + ' dias') +
+    kv('Saldo hoje', brl(s0)) + kv('Juros adicionais até lá', brl(s - s0)) +
+    kv('Valor para quitar em ' + fmtD(d), brl(s), 'total');
+}
+$('simData').addEventListener('change', simular);
+
+/* ===== Extrato ===== */
+function extrato() {
+  const h = dataLocalISO(), its = st.itens.filter(i => i.d <= h);
+  let t = `*Extrato de empréstimo: ${st.nome}*\nData: ${fmtD(h)}\nTaxa: ${num(st.taxa)}% ao mês (${st.modo === 's' ? 'juros simples' : 'juros compostos'})\n\n`;
+  its.forEach(i => { t += `${fmtD(i.d)}  ${i.t === 'Pagamento' ? '− Pagamento' : '+ Empréstimo'} ${brl(i.v)}${i.o ? ' (' + i.o + ')' : ''}\n`; });
+  const e = somaV(its.filter(i => i.t === 'Empréstimo')), p = somaV(its.filter(i => i.t === 'Pagamento')), s = saldoEm(h, true);
+  return t + `\nTotal emprestado: ${brl(e)}\nTotal pago: ${brl(p)}\nJuros até hoje: ${brl(s - e + p)}\n*Saldo devedor hoje: ${brl(s)}*`;
+}
+function compartilhar() {
+  if (!st.itens.length) { alert('Nenhum lançamento para compartilhar.'); return; }
+  const t = extrato();
+  const bts = [{t:'💬 Enviar pelo WhatsApp', cls:'pag', fn:() => { window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank'); }}];
+  if (navigator.share) bts.push({t:'📤 Compartilhar…', cls:'azul', fn:() => { navigator.share({text:t}).catch(() => {}); }});
+  bts.push({t:'📋 Copiar texto', cls:'cinza', fn:async () => {
+    try { await navigator.clipboard.writeText(t); } catch (e) { $('exTxt').select(); document.execCommand('copy'); }
+    alert('Texto copiado.'); return false;
+  }}, {t:'Fechar', cls:'secondary'});
+  modal('Extrato: ' + st.nome, '<textarea id="exTxt" rows="12" readonly></textarea>', bts);
+  $('exTxt').value = t;
+}
+$('btnShare').addEventListener('click', compartilhar);
+
+/* ===== Backup ===== */
+function checarBackup() {
+  const h = dataLocalISO(), ref = db.ultBackup;
+  const tem = db.devs.some(d => d.itens.length);
+  const venc = !ref || diasEntre(ref, h) >= 30;
+  const adiado = db.adiar && db.adiar > h;
+  $('aviso').hidden = !(tem && venc && !adiado);
+  $('avisoTxt').textContent = ref ? `Seu último backup foi há ${diasEntre(ref, h)} dias (${fmtD(ref)}).` : 'Você ainda não fez nenhum backup dos seus dados.';
+}
 function exportar() {
-  const blob = new Blob([JSON.stringify(st, null, 2)], {type:'application/json;charset=utf-8'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const {seg, ...dados} = db;
+  const blob = new Blob([JSON.stringify(dados, null, 2)], {type:'application/json;charset=utf-8'});
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
   a.href = url; a.download = 'backup-emprestimo-' + dataLocalISO() + '.json';
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+  db.ultBackup = dataLocalISO(); db.adiar = null; save(); render();
 }
 $('arq').addEventListener('change', e => {
   const file = e.target.files && e.target.files[0];
@@ -238,18 +641,12 @@ $('arq').addEventListener('change', e => {
   const reader = new FileReader();
   reader.onload = () => {
     try {
-      const dados = JSON.parse(reader.result);
-      if (!dados || !Array.isArray(dados.itens)) throw new Error('Formato inválido');
-      const itens = dados.itens.map(i => {
-        if (!i || !/^\d{4}-\d{2}-\d{2}$/.test(i.d) || !['Empréstimo','Pagamento'].includes(i.t) ||
-            !Number.isFinite(Number(i.v)) || Number(i.v) <= 0) throw new Error('Lançamento inválido');
-        return {d:i.d, t:i.t, v:Math.round(Number(i.v)*100)/100};
-      });
-      const taxa = Number(dados.taxa);
-      const modo = dados.modo === 'c' ? 'c' : 's';
-      if (!Number.isFinite(taxa) || taxa < 0) throw new Error('Taxa inválida');
-      if (confirm('Substituir os dados atuais pelo conteúdo deste backup?')) {
-        st = {taxa, modo, itens}; save(); render();
+      const bruto = JSON.parse(reader.result), n = normalizar(bruto);
+      if (!n) throw new Error('Formato inválido');
+      if (confirm(`Substituir os dados atuais pelo backup (${n.devs.length} devedor(es))?`)) {
+        db.devs = n.devs; db.atual = n.atual;
+        if (bruto.tema) db.tema = n.tema;
+        st = atual(); save(); aplicarTema(); render();
         alert('Backup restaurado com sucesso.');
       }
     } catch (err) { alert('Arquivo de backup inválido ou incompatível.'); }
@@ -258,47 +655,30 @@ $('arq').addEventListener('change', e => {
   reader.onerror = () => { alert('Não foi possível ler o arquivo.'); e.target.value = ''; };
   reader.readAsText(file);
 });
-$('taxa').addEventListener('change', e => {
-  const taxa = Number(e.target.value);
-  st.taxa = Number.isFinite(taxa) && taxa >= 0 ? taxa : 0;
-  save(); render();
-});
-$('modo').addEventListener('change', e => {
-  st.modo = e.target.value === 'c' ? 'c' : 's';
-  save(); render();
-});
-$('btnEmp').addEventListener('click', () => adicionar('Empréstimo'));
-$('btnPag').addEventListener('click', () => adicionar('Pagamento'));
 $('btnExportar').addEventListener('click', exportar);
+$('avisoExp').addEventListener('click', exportar);
+$('avisoAdiar').addEventListener('click', () => { db.adiar = somaDias(7); save(); checarBackup(); });
 $('btnImportar').addEventListener('click', () => $('arq').click());
 $('btnLimpar').addEventListener('click', () => {
-  if (confirm('Tem certeza de que deseja apagar todos os lançamentos? Exporte um backup antes, se precisar guardá-los.')) {
+  if (confirm(`Apagar todos os lançamentos de ${st.nome}? Exporte um backup antes, se precisar guardá-los.`)) {
     st.itens = []; save(); render();
   }
 });
 
+$('taxa').addEventListener('change', e => {
+  const taxa = Number(e.target.value);
+  st.taxa = Number.isFinite(taxa) && taxa >= 0 ? taxa : 0; save(); render();
+});
+$('modo').addEventListener('change', e => { st.modo = e.target.value === 'c' ? 'c' : 's'; save(); render(); });
+$('btnEmp').addEventListener('click', () => adicionar('Empréstimo'));
+$('btnPag').addEventListener('click', () => adicionar('Pagamento'));
+
 /* ===== Memória de Cálculo ===== */
-const fmtD = s => s.split('-').reverse().join('/');
-const num = (n, c = 4) => n.toLocaleString('pt-BR', {maximumFractionDigits: c});
-const kv = (a, b, cls = '') => `<div class="kv ${cls}"><span>${a}</span><b>${b}</b></div>`;
-function diasEntre(a, b) {
-  return Math.max(0, Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00')) / 86400000));
-}
-function fatorEntre(a, b) {
-  const r = st.taxa/100, n = diasEntre(a, b)/30;
-  return st.modo === 's' ? 1 + r*n : Math.pow(1+r, n);
-}
-function saldoEm(data, incluiDia) {
-  return st.itens.reduce((s, it) => {
-    if (incluiDia ? it.d > data : it.d >= data) return s;
-    const v = it.v * fatorEntre(it.d, data);
-    return s + (it.t === 'Pagamento' ? -v : v);
-  }, 0);
-}
 function renderCalc() {
   st.itens.sort((a,b) => a.d.localeCompare(b.d));
   const h = dataLocalISO(), r = st.taxa/100, simples = st.modo === 's';
   let html = `<section class="card tag-r">
+    ${kv('Devedor', esc(st.nome))}
     ${kv('Data do cálculo', fmtD(h))}
     ${kv('Taxa', num(st.taxa) + '% ao mês (' + (simples ? 'juros simples' : 'juros compostos') + ')')}
     ${kv('Mês considerado', '30 dias')}
@@ -311,26 +691,24 @@ function renderCalc() {
     const emp = it.t === 'Empréstimo', d = diasEntre(it.d, h), n = d/30;
     const f = fatorEntre(it.d, h), at = it.v*f, j = at - it.v;
     if (emp) { oE += it.v; aE += at; cE++; } else { oP += it.v; aP += at; cP++; }
-    const conta = simples
-      ? `${brl(it.v)} × (1 + ${num(r)} × ${num(n)})`
-      : `${brl(it.v)} × (1 + ${num(r)}) ^ ${num(n)}`;
+    const conta = simples ? `${brl(it.v)} × (1 + ${num(r)} × ${num(n)})` : `${brl(it.v)} × (1 + ${num(r)}) ^ ${num(n)}`;
     html += `<section class="card ${emp ? 'tag-e' : 'tag-p'}">
       <h3>${emp ? '🔴 Empréstimo ' + cE : '🟢 Pagamento recebido ' + cP}: ${brl(it.v)}</h3>
+      ${it.o ? kv('Observação', esc(it.o)) : ''}
       ${kv('Período', fmtD(it.d) + ' → ' + fmtD(h))}
       ${kv('Dias corridos', d + ' dias = ' + num(n) + ' mês(es)')}
       <div class="formula">${conta}<br>= ${brl(it.v)} × ${num(f, 6)}<br>= <b>${brl(at)}</b></div>
       ${kv('Valor original', brl(it.v))}
       ${kv(emp ? 'Juros a receber' : 'Juros que deixaram de correr', brl(j))}
       ${kv(emp ? 'Valor a receber hoje' : 'Abatido do saldo a receber', (emp ? '' : '− ') + brl(at), 'total')}
-      ${emp ? '' : `<div class="hint">A partir de ${fmtD(it.d)}, estes ${brl(it.v)} deixaram de gerar juros para o devedor. O valor corrigido mostra quanto ele economizou ao pagar nessa data.</div>`}
+      ${emp ? '' : `<div class="hint">A partir de ${fmtD(it.d)}, estes ${brl(it.v)} deixaram de gerar juros para o devedor.</div>`}
     </section>`;
   });
 
   const datas = [...new Set(st.itens.map(i => i.d))];
   let ant = 0, linhas = '';
   datas.forEach((d, k) => {
-    const antes = saldoEm(d, false), depois = saldoEm(d, true);
-    const juros = k ? antes - ant : 0;
+    const antes = saldoEm(d, false), depois = saldoEm(d, true), juros = k ? antes - ant : 0;
     const ev = st.itens.filter(i => i.d === d)
       .map(i => `<span class="${i.t === 'Pagamento' ? 'neg' : 'pos'}">${i.t === 'Pagamento' ? '− Recebido ' : '+ Emprestado '}${brl(i.v)}</span>`).join('<br>');
     linhas += `<tr><td>${fmtD(d)}</td><td>${ev}</td><td>${k ? brl(juros) : '—'}</td><td><b>${brl(depois)}</b></td></tr>`;
@@ -341,7 +719,7 @@ function renderCalc() {
   html += `<section class="card tag-r"><h3>🕒 Linha do tempo do saldo a receber</h3>
     <div class="table-wrap"><table><thead><tr><th>Data</th><th>Evento</th><th>Juros no período</th><th>Saldo a receber</th></tr></thead>
     <tbody>${linhas}</tbody></table></div>
-    <div class="hint">"Juros no período" são os juros a receber que correram desde o evento anterior. Cada pagamento recebido aparece abatendo o saldo na data em que foi feito.</div></section>`;
+    <div class="hint">"Juros no período" são os juros que correram desde o evento anterior.</div></section>`;
 
   html += `<section class="card tag-r"><h3>📋 Resumo final</h3>
     ${kv('Emprestado (original)', brl(oE))}
@@ -358,32 +736,23 @@ function renderCalc() {
 
 /* ===== Análise de Lucro ===== */
 const pct = n => (n * 100).toLocaleString('pt-BR', {maximumFractionDigits: 2}) + '%';
-const somaV = a => a.reduce((s, i) => s + i.v, 0);
-function proxMes(iso) {
-  const [y, m] = iso.split('-').map(Number);
-  return dataLocalISO(new Date(y, m, 1));
-}
+function proxMes(iso) { const [y, m] = iso.split('-').map(Number); return dataLocalISO(new Date(y, m, 1)); }
 function renderLucro() {
   st.itens.sort((a,b) => a.d.localeCompare(b.d));
   const h = dataLocalISO(), el = $('lucroConteudo');
   const itens = st.itens.filter(i => i.d <= h);
-  const emp = itens.filter(i => i.t === 'Empréstimo');
-  const pag = itens.filter(i => i.t === 'Pagamento');
+  const emp = itens.filter(i => i.t === 'Empréstimo'), pag = itens.filter(i => i.t === 'Pagamento');
   if (!emp.length) { el.innerHTML = '<div class="card empty">Nenhum empréstimo cadastrado.</div>'; return; }
 
-  const oE = somaV(emp), oP = somaV(pag);
-  const saldo = saldoEm(h, true);
-  const lucroTotal = saldo + oP - oE;
-  const realizado = Math.max(0, oP - oE);
-  const aRealizar = lucroTotal - realizado;
+  const oE = somaV(emp), oP = somaV(pag), saldo = saldoEm(h, true);
+  const lucroTotal = saldo + oP - oE, realizado = Math.max(0, oP - oE), aRealizar = lucroTotal - realizado;
   const capAberto = Math.max(0, oE - oP);
   const ini = emp[0].d, dTot = diasEntre(ini, h), meses = Math.max(dTot / 30, 1/30);
-  const roi = lucroTotal / oE;
-  const roiMesSimples = roi / meses;
-  const roiMesComp = Math.pow(1 + roi, 1 / meses) - 1;
+  const roi = lucroTotal / oE, roiMesSimples = roi / meses, roiMesComp = Math.pow(1 + roi, 1 / meses) - 1;
   const recuperado = Math.min(1, oP / oE);
 
   let html = `<section class="card tag-r"><h3>💼 Visão geral</h3>
+    ${kv('Devedor', esc(st.nome))}
     ${kv('Período da operação', fmtD(ini) + ' → ' + fmtD(h))}
     ${kv('Duração', dTot + ' dias = ' + num(meses, 2) + ' mês(es)')}
     ${kv('Total emprestado', brl(oE))}
@@ -392,7 +761,6 @@ function renderLucro() {
     ${kv('Capital ainda não recuperado', brl(capAberto))}
     ${kv('Capital recuperado', pct(recuperado))}
   </section>
-
   <section class="card tag-p"><h3>💰 Lucro</h3>
     ${kv('Lucro realizado (já recebido)', brl(realizado))}
     ${kv('Lucro a realizar (no saldo)', brl(aRealizar))}
@@ -400,7 +768,6 @@ function renderLucro() {
     <div class="formula">Lucro total = Saldo + Recebido − Emprestado<br>= ${brl(saldo)} + ${brl(oP)} − ${brl(oE)}</div>
     <div class="hint">Os pagamentos primeiro devolvem o capital emprestado. Só o que passa disso conta como lucro realizado.</div>
   </section>
-
   <section class="card tag-r"><h3>📊 Rentabilidade</h3>
     ${kv('Retorno total sobre o emprestado', pct(roi))}
     ${kv('Lucro médio por mês', brl(lucroTotal / meses))}
@@ -408,48 +775,213 @@ function renderLucro() {
     ${kv('Rentabilidade mensal média (simples)', pct(roiMesSimples))}
     ${kv('Rentabilidade mensal equivalente (composta)', pct(roiMesComp))}
     ${kv('Projeção do lucro em 12 meses (ritmo atual)', brl(lucroTotal / meses * 12))}
-    <div class="hint">Se houve empréstimos em datas diferentes, a rentabilidade usa o total emprestado e o período desde o primeiro empréstimo. É uma média aproximada.</div>
+    <div class="hint">Com empréstimos em datas diferentes, a rentabilidade é uma média aproximada desde o primeiro empréstimo.</div>
   </section>`;
 
   let linhas = '', ant = 0, acum = 0;
   for (let a = ini.slice(0, 7) + '-01'; a <= h; a = proxMes(a)) {
-    const b = proxMes(a);
-    const sFim = b > h ? saldo : saldoEm(b, false);
+    const b = proxMes(a), sFim = b > h ? saldo : saldoEm(b, false);
     const noMes = itens.filter(i => i.d >= a && i.d < b);
-    const e = somaV(noMes.filter(i => i.t === 'Empréstimo'));
-    const p = somaV(noMes.filter(i => i.t === 'Pagamento'));
-    const juros = sFim - ant - e + p;
-    acum += juros;
-    const nome = new Date(a + 'T00:00:00').toLocaleDateString('pt-BR', {month: 'short', year: '2-digit'});
+    const e = somaV(noMes.filter(i => i.t === 'Empréstimo')), p = somaV(noMes.filter(i => i.t === 'Pagamento'));
+    const juros = sFim - ant - e + p; acum += juros;
+    const nome = new Date(a + 'T00:00:00').toLocaleDateString('pt-BR', {month:'short', year:'2-digit'});
     linhas += `<tr><td>${nome}${b > h ? ' *' : ''}</td><td class="pos">${e ? brl(e) : '—'}</td><td class="neg">${p ? brl(p) : '—'}</td><td>${brl(juros)}</td><td><b>${brl(acum)}</b></td></tr>`;
     ant = sFim;
   }
   html += `<section class="card tag-r"><h3>🗓️ Lucro mês a mês</h3>
     <div class="table-wrap"><table><thead><tr><th>Mês</th><th>Emprestado</th><th>Recebido</th><th>Juros no mês</th><th>Lucro acumulado</th></tr></thead>
     <tbody>${linhas}</tbody></table></div>
-    <div class="hint">* Mês atual, calculado até hoje. "Juros no mês" é o lucro gerado no mês, recebido ou não.</div></section>`;
-
+    <div class="hint">* Mês atual, calculado até hoje.</div></section>`;
   el.innerHTML = html;
 }
 
+/* ===== Segurança (PIN) ===== */
+const normR = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, ' ');
+const normC = s => String(s).toUpperCase().replace(/[^A-Z0-9]/g, '');
+const hex = a => [...a].map(x => x.toString(16).padStart(2,'0')).join('');
+const gerarSalt = () => hex(crypto.getRandomValues(new Uint8Array(16)));
+function gerarCodigo() {
+  const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const s = [...crypto.getRandomValues(new Uint8Array(12))].map(x => A[x % 32]).join('');
+  return s.slice(0,4) + '-' + s.slice(4,8) + '-' + s.slice(8);
+}
+async function hash(txt, salt) {
+  const data = new TextEncoder().encode(salt + '|' + txt);
+  if (window.crypto && crypto.subtle) return hex(new Uint8Array(await crypto.subtle.digest('SHA-256', data)));
+  let h = 0x811c9dc5; for (const c of data) { h ^= c; h = Math.imul(h, 16777619) >>> 0; }
+  return 'f' + h.toString(16);
+}
+const pinF = (id, rot) => `<label for="${id}">${rot}</label><input id="${id}" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off">`;
+const pergF = () => `<label for="pg">Pergunta de recuperação</label>
+  <input id="pg" list="pergs" maxlength="100" placeholder="Escolha ou escreva uma pergunta">
+  <datalist id="pergs"><option value="Nome do meu primeiro animal de estimação?"><option value="Cidade onde minha mãe nasceu?"><option value="Nome da minha primeira escola?"><option value="Meu apelido de infância?"></datalist>
+  <label for="rs">Resposta</label><input id="rs" maxlength="100" autocomplete="off">
+  <div class="hint">Maiúsculas, acentos e espaços extras são ignorados na resposta.</div>`;
+const pinOk = p => /^\d{4,8}$/.test(p);
+function validarNovo() {
+  const p1 = $('p1').value, p2 = $('p2').value;
+  if (!pinOk(p1)) { alert('O PIN deve ter de 4 a 8 números.'); return null; }
+  if (p1 !== p2) { alert('Os PINs não coincidem.'); return null; }
+  return p1;
+}
+async function confere(id) {
+  if (await hash($(id).value, db.seg.salt) === db.seg.pin) return true;
+  alert('PIN atual incorreto.'); return false;
+}
+function mostrarCodigo(cod) {
+  modal('🔑 Código de recuperação', `<div class="formula" style="font-size:22px;text-align:center;letter-spacing:2px">${cod}</div>
+    <div class="hint">Anote este código em papel ou em outro lugar seguro. Ele libera o app se você esquecer o PIN e a resposta da pergunta. Ele não será mostrado de novo.</div>`, [
+    {t:'📋 Copiar', cls:'cinza', fn:async () => { try { await navigator.clipboard.writeText(cod); alert('Código copiado.'); } catch (e) {} return false; }},
+    {t:'Já anotei', cls:'pag'}
+  ]);
+}
+function ativarPin() {
+  modal('Ativar PIN', pinF('p1','Novo PIN (4 a 8 números)') + pinF('p2','Confirme o PIN') + pergF(), [
+    {t:'Ativar', cls:'pag', fn:async () => {
+      const p = validarNovo(); if (!p) return false;
+      const pg = $('pg').value.trim(), rs = normR($('rs').value);
+      if (!pg || !rs) { alert('Preencha a pergunta e a resposta de recuperação.'); return false; }
+      const salt = gerarSalt(), cod = gerarCodigo();
+      db.seg = {salt, pin:await hash(p, salt), perg:pg.slice(0,100), resp:await hash(rs, salt), cod:await hash(normC(cod), salt), auto:1, falhas:0, ate:0};
+      save(); renderSeg(); mostrarCodigo(cod);
+    }},
+    {t:'Cancelar', cls:'secondary'}
+  ]);
+}
+function alterarPin() {
+  modal('Alterar PIN', pinF('pa','PIN atual') + pinF('p1','Novo PIN (4 a 8 números)') + pinF('p2','Confirme o novo PIN'), [
+    {t:'Salvar', cls:'pag', fn:async () => {
+      if (!await confere('pa')) return false;
+      const p = validarNovo(); if (!p) return false;
+      db.seg.pin = await hash(p, db.seg.salt); save(); alert('PIN alterado com sucesso.');
+    }},
+    {t:'Cancelar', cls:'secondary'}
+  ]);
+}
+function alterarPerg() {
+  modal('Alterar pergunta de recuperação', pinF('pa','PIN atual') + pergF(), [
+    {t:'Salvar', cls:'pag', fn:async () => {
+      if (!await confere('pa')) return false;
+      const pg = $('pg').value.trim(), rs = normR($('rs').value);
+      if (!pg || !rs) { alert('Preencha a pergunta e a resposta.'); return false; }
+      db.seg.perg = pg.slice(0,100); db.seg.resp = await hash(rs, db.seg.salt); save(); renderSeg();
+      alert('Pergunta de recuperação atualizada.');
+    }},
+    {t:'Cancelar', cls:'secondary'}
+  ]);
+}
+function novoCodigo() {
+  modal('Gerar novo código', pinF('pa','PIN atual') + '<div class="hint">O código anterior deixará de funcionar.</div>', [
+    {t:'Gerar', cls:'pag', fn:async () => {
+      if (!await confere('pa')) return false;
+      const cod = gerarCodigo(); db.seg.cod = await hash(normC(cod), db.seg.salt); save(); mostrarCodigo(cod);
+    }},
+    {t:'Cancelar', cls:'secondary'}
+  ]);
+}
+function desativarPin() {
+  modal('Desativar PIN', pinF('pa','PIN atual'), [
+    {t:'Desativar', cls:'emp', fn:async () => {
+      if (!await confere('pa')) return false;
+      db.seg = null; save(); renderSeg(); alert('Bloqueio com PIN desativado.');
+    }},
+    {t:'Cancelar', cls:'secondary'}
+  ]);
+}
+function renderSeg() {
+  const s = db.seg, a = $('segArea');
+  if (!s) {
+    a.innerHTML = '<div class="sub">🔓 PIN desativado</div><button type="button" class="azul" id="sAtivar">Ativar bloqueio com PIN</button>';
+    $('sAtivar').addEventListener('click', ativarPin); return;
+  }
+  a.innerHTML = `<div class="sub">🔒 PIN ativado</div>
+    <div class="sub">Pergunta de recuperação: <b>${esc(s.perg)}</b></div>
+    <label for="sAuto">Bloquear ao sair do app</label>
+    <select id="sAuto"><option value="0">Imediatamente</option><option value="1">Após 1 minuto</option><option value="5">Após 5 minutos</option><option value="15">Após 15 minutos</option><option value="-1">Só ao abrir o app</option></select>
+    <button type="button" class="azul" id="sAlt">🔢 Alterar PIN</button>
+    <button type="button" class="secondary" id="sPerg">❓ Alterar pergunta de recuperação</button>
+    <button type="button" class="secondary" id="sCod">🔑 Gerar novo código de recuperação</button>
+    <button type="button" class="cinza" id="sBloq">🔒 Bloquear agora</button>
+    <button type="button" class="emp" id="sDes">Desativar PIN</button>`;
+  $('sAuto').value = String(s.auto);
+  $('sAuto').addEventListener('change', e => { s.auto = Number(e.target.value); save(); });
+  $('sAlt').addEventListener('click', alterarPin);
+  $('sPerg').addEventListener('click', alterarPerg);
+  $('sCod').addEventListener('click', novoCodigo);
+  $('sBloq').addEventListener('click', bloquear);
+  $('sDes').addEventListener('click', desativarPin);
+}
+function bloquear() {
+  if (!db.seg) return;
+  $('modal').hidden = true; $('lock').hidden = false; $('lockMsg').textContent = ''; $('pinIn').value = '';
+  setTimeout(() => $('pinIn').focus(), 60);
+}
+async function desbloquear() {
+  const s = db.seg, agora = Date.now();
+  if (s.ate > agora) { $('lockMsg').textContent = `Muitas tentativas. Aguarde ${Math.ceil((s.ate - agora)/1000)} s.`; return; }
+  if (await hash($('pinIn').value, s.salt) === s.pin) {
+    s.falhas = 0; s.ate = 0; save(); $('lock').hidden = true; $('lockMsg').textContent = ''; render();
+  } else {
+    s.falhas++;
+    if (s.falhas % 5 === 0) s.ate = agora + 60000;
+    save(); $('pinIn').value = '';
+    $('lockMsg').textContent = s.ate > agora ? 'Muitas tentativas. Aguarde 60 s.' : `PIN incorreto (${s.falhas % 5}/5).`;
+  }
+}
+function esqueci() {
+  const s = db.seg;
+  modal('Recuperar acesso', `<div class="sub">Responda à pergunta <b>ou</b> use o código de recuperação.</div>
+    <label for="rr">${esc(s.perg)}</label><input id="rr" autocomplete="off">
+    <label for="rc">Código de recuperação</label><input id="rc" placeholder="XXXX-XXXX-XXXX" autocapitalize="characters" autocomplete="off">
+    ${pinF('p1','Novo PIN (4 a 8 números)')}${pinF('p2','Confirme o novo PIN')}`, [
+    {t:'Redefinir PIN', cls:'pag', fn:async () => {
+      const r = normR($('rr').value), c = normC($('rc').value);
+      const ok = (r && await hash(r, s.salt) === s.resp) || (c && await hash(c, s.salt) === s.cod);
+      if (!ok) { alert('Resposta ou código incorretos.'); return false; }
+      const p = validarNovo(); if (!p) return false;
+      s.pin = await hash(p, s.salt); s.falhas = 0; s.ate = 0; save();
+      $('lock').hidden = true; render(); alert('PIN redefinido. App desbloqueado.');
+    }},
+    {t:'Não lembro de nada', cls:'emp', fn:() => {
+      if (!confirm('Sem a resposta ou o código, a única forma de liberar o app é APAGAR TODOS OS DADOS deste aparelho. Se você tiver um backup exportado, poderá importá-lo depois. Continuar?')) return false;
+      if (!confirm('Confirma a exclusão definitiva de todos os dados?')) return false;
+      localStorage.removeItem(KEY); location.reload();
+    }},
+    {t:'Cancelar', cls:'secondary'}
+  ]);
+}
+$('btnEntrar').addEventListener('click', desbloquear);
+$('pinIn').addEventListener('keydown', e => { if (e.key === 'Enter') desbloquear(); });
+$('btnEsqueci').addEventListener('click', esqueci);
+let saiu = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { saiu = Date.now(); return; }
+  const s = db.seg;
+  if (s && s.auto >= 0 && saiu && Date.now() - saiu >= s.auto * 60000) bloquear();
+});
+
 /* ===== Navegação ===== */
+const PAGINAS = {'#calculo':'calc', '#lucro':'lucro', '#config':'config'};
 function rota() {
-  const p = location.hash;
-  $('app').hidden = p === '#calculo' || p === '#lucro';
-  $('calc').hidden = p !== '#calculo';
-  $('lucro').hidden = p !== '#lucro';
-  if (p === '#calculo') renderCalc();
-  if (p === '#lucro') renderLucro();
+  const alvo = PAGINAS[location.hash] || 'app';
+  ['app','calc','lucro','config'].forEach(id => { $(id).hidden = id !== alvo; });
+  if (alvo === 'calc') renderCalc();
+  if (alvo === 'lucro') renderLucro();
+  if (alvo === 'config') { renderTema(); renderSeg(); }
+  if (alvo === 'app') render();
   window.scrollTo(0, 0);
 }
 $('btnCalc').addEventListener('click', () => { location.hash = 'calculo'; });
 $('btnLucro').addEventListener('click', () => { location.hash = 'lucro'; });
-$('btnVoltar').addEventListener('click', () => { location.hash = ''; });
-$('btnVoltar2').addEventListener('click', () => { location.hash = ''; });
+$('btnCfg').addEventListener('click', () => { location.hash = 'config'; });
+document.querySelectorAll('.voltar').forEach(b => b.addEventListener('click', () => { location.hash = ''; }));
 window.addEventListener('hashchange', rota);
 
+/* ===== Início ===== */
+aplicarTema();
+if (db.seg) bloquear();
 $('data').value = dataLocalISO();
-render();
+$('simData').value = somaDias(30);
 rota();
 </script>
 </body>
